@@ -1107,7 +1107,22 @@ class SupabaseProvider {
     const isLive = this.isLiveMode;
     const db = this.getLocalStorageDb();
 
-    const inbound = (db.inbound_orders || []).find(o => o.id === inboundId);
+    let inbound = (db.inbound_orders || []).find(o => o.id === inboundId || o.code === inboundId);
+    if (!inbound && isLive) {
+      try {
+        let query = this.supabase.from('inbound_orders').select('*');
+        if (isValidUUID(inboundId)) {
+          query = query.eq('id', inboundId);
+        } else {
+          query = query.eq('code', inboundId);
+        }
+        const { data } = await query;
+        if (data && data.length > 0) inbound = data[0];
+      } catch (e) {
+        console.error('Supabase fetch inbound before fulfill error:', e);
+      }
+    }
+
     if (!inbound) throw new Error('Không tìm thấy phiếu Inbound!');
 
     inbound.status = 'Received';
@@ -1117,6 +1132,9 @@ class SupabaseProvider {
 
     let grandTotal = 0;
 
+    // Fetch live products list to ensure we have all products (Supabase + LocalStorage)
+    const allProducts = await this.getProducts();
+
     // Update items with actual received quantities
     inbound.items = (itemsWithReceivedQty || inbound.items).map(item => {
       const recQty = Number(item.received_qty) >= 0 ? Number(item.received_qty) : Number(item.expected_qty || 0);
@@ -1124,12 +1142,16 @@ class SupabaseProvider {
       const subtotal = recQty * cost;
       grandTotal += subtotal;
 
-      // Update product stock in db.products
-      const prod = db.products.find(p => p.id === item.product_id || p.sku === item.product_sku || p.name === item.product_name);
+      // Find product in live products list
+      const prod = allProducts.find(p => p.id === item.product_id || (p.sku && p.sku === item.product_sku) || (p.name && p.name === item.product_name));
       if (prod) {
         const prevStock = Number(prod.stock_quantity) || 0;
         const newStock = prevStock + recQty;
         prod.stock_quantity = newStock;
+
+        // Also update local db.products if present
+        const localProd = (db.products || []).find(p => p.id === prod.id || p.sku === prod.sku || p.name === prod.name);
+        if (localProd) localProd.stock_quantity = newStock;
 
         // Record stock transaction in Thẻ Kho
         if (!db.inventory_transactions) db.inventory_transactions = [];
@@ -1145,8 +1167,12 @@ class SupabaseProvider {
           created_at: new Date().toISOString()
         });
 
-        if (isLive && isValidUUID(prod.id)) {
-          this.supabase.from('products').update({ stock_quantity: newStock }).eq('id', prod.id).then();
+        if (isLive) {
+          if (isValidUUID(prod.id)) {
+            this.supabase.from('products').update({ stock_quantity: newStock }).eq('id', prod.id).then();
+          } else if (prod.sku) {
+            this.supabase.from('products').update({ stock_quantity: newStock }).eq('sku', prod.sku).then();
+          }
         }
       }
 
