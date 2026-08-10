@@ -357,6 +357,12 @@ function renderInboundTable(orders) {
 
 // Modal 1: Create PR / Inbound
 async function openCreateInboundModal() {
+  if (!allProductsList || allProductsList.length === 0) {
+    if (window.dbProvider) {
+      allProductsList = await window.dbProvider.getProducts();
+    }
+  }
+
   const supplierSelect = document.getElementById('inb-supplier-select');
   if (supplierSelect && window.dbProvider) {
     const customers = await window.dbProvider.getCustomers();
@@ -442,10 +448,10 @@ function onInboundItemProductChange(rowId) {
   const select = row.querySelector('.item-product-select');
   const costInput = row.querySelector('.item-cost-input');
 
-  if (select && costInput) {
+  if (select && costInput && select.selectedIndex >= 0) {
     const selectedOption = select.options[select.selectedIndex];
     const defaultCost = selectedOption ? (selectedOption.dataset.cost || 0) : 0;
-    costInput.value = formatNumberWithCommas(defaultCost);
+    costInput.value = typeof formatNumberWithDots === 'function' ? formatNumberWithDots(defaultCost) : defaultCost;
   }
 
   calculateInboundFormTotals();
