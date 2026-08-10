@@ -982,6 +982,9 @@ class SupabaseProvider {
       try {
         const { data, error } = await this.supabase.from('inbound_orders').select('*').order('created_at', { ascending: false });
         if (!error && data) return data;
+        if (error && error.code === '42P01') {
+          console.warn('Bảng inbound_orders chưa tồn tại trên Supabase Database.');
+        }
       } catch (err) {
         console.error('Error fetching inbound_orders from Supabase:', err);
       }
@@ -1011,19 +1014,30 @@ class SupabaseProvider {
           supplier_id: isValidUUID(orderData.supplier_id) ? orderData.supplier_id : null,
           supplier_name: orderData.supplier_name,
           created_by: orderData.created_by,
-          expected_date: orderData.expected_date,
+          expected_date: orderData.expected_date ? orderData.expected_date : null,
           status: orderData.status,
-          total_amount: orderData.total_amount,
+          total_amount: Number(orderData.total_amount) || 0,
           notes: orderData.notes || '',
           items: orderData.items,
           created_at: orderData.created_at
         });
-        const { data } = await this.supabase.from('inbound_orders').insert([payload]).select();
-        if (data && data.length > 0) {
+        const { data, error } = await this.supabase.from('inbound_orders').insert([payload]).select();
+        if (error) {
+          console.error('Supabase createInboundOrder error:', error);
+          if (error.code === '42P01' || (error.message && error.message.includes('inbound_orders'))) {
+            if (typeof showToast === 'function') {
+              showToast('Lưu ý Supabase: Chưa tạo bảng inbound_orders! Vui lòng thực thi SQL script config/supabase-schema.sql trên Supabase Dashboard.', 'warning', 8000);
+            }
+          } else {
+            if (typeof showToast === 'function') {
+              showToast('Lỗi lưu Supabase: ' + (error.message || 'Không thể ghi dữ liệu'), 'danger');
+            }
+          }
+        } else if (data && data.length > 0) {
           orderData.id = data[0].id;
         }
       } catch (e) {
-        console.error('Supabase createInboundOrder error:', e);
+        console.error('Supabase createInboundOrder catch error:', e);
       }
     }
 
@@ -1135,13 +1149,24 @@ class SupabaseProvider {
 
     if (isLive) {
       try {
-        this.supabase.from('inbound_orders').update({
+        let updateQuery = this.supabase.from('inbound_orders').update({
           status: 'Received',
           received_by: inbound.received_by,
           received_at: inbound.received_at,
           total_amount: inbound.total_amount,
           items: inbound.items
-        }).eq('id', inbound.id).then();
+        });
+
+        if (isValidUUID(inbound.id)) {
+          updateQuery = updateQuery.eq('id', inbound.id);
+        } else {
+          updateQuery = updateQuery.eq('code', inbound.code);
+        }
+
+        const { error } = await updateQuery;
+        if (error) {
+          console.error('Supabase fulfillInboundOrder update error:', error);
+        }
       } catch (e) {
         console.error('Supabase fulfillInboundOrder error:', e);
       }
@@ -1159,7 +1184,13 @@ class SupabaseProvider {
     if (inbound) {
       inbound.status = 'Cancelled';
       if (isLive) {
-        this.supabase.from('inbound_orders').update({ status: 'Cancelled' }).eq('id', inboundId).then();
+        let cancelQuery = this.supabase.from('inbound_orders').update({ status: 'Cancelled' });
+        if (isValidUUID(inbound.id)) {
+          cancelQuery = cancelQuery.eq('id', inbound.id);
+        } else {
+          cancelQuery = cancelQuery.eq('code', inbound.code);
+        }
+        cancelQuery.then();
       }
       this.saveLocalStorageDb(db);
     }
