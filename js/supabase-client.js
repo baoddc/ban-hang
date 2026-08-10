@@ -1051,27 +1051,37 @@ class SupabaseProvider {
         const { data, error } = await this.supabase.from('inbound_orders').insert([payload]).select();
         if (error) {
           console.error('Supabase createInboundOrder initial insert error:', error);
+          
+          // Retry 1: Foreign key constraint violation retry without supplier_id
           if (error.code === '23503') {
-            // Foreign key constraint violation retry without supplier_id
             delete payload.supplier_id;
             const { data: fbData, error: fbErr } = await this.supabase.from('inbound_orders').insert([payload]).select();
-            if (!fbErr && fbData && fbData.length > 0) {
+            if (fbErr) {
+              const { error: insErr2 } = await this.supabase.from('inbound_orders').insert([payload]);
+              if (insErr2) throw new Error('Supabase FK Error: ' + (insErr2.message || fbErr.message));
+            } else if (fbData && fbData.length > 0) {
               savedOrder = { ...savedOrder, ...fbData[0] };
             }
-          } else if (error.message && error.message.includes('items')) {
+          } 
+          // Retry 2: Items column format mismatch (e.g. TEXT vs JSONB)
+          else if (error.message && (error.message.includes('items') || error.code === '42804')) {
             payload.items = JSON.stringify(orderData.items);
             const { data: fbData, error: fbErr } = await this.supabase.from('inbound_orders').insert([payload]).select();
-            if (!fbErr && fbData && fbData.length > 0) {
+            if (fbErr) {
+              const { error: insErr3 } = await this.supabase.from('inbound_orders').insert([payload]);
+              if (insErr3) throw new Error('Lỗi định dạng cột items: ' + (insErr3.message || fbErr.message));
+            } else if (fbData && fbData.length > 0) {
               savedOrder = { ...savedOrder, ...fbData[0] };
             }
-          } else if (error.code === '42P01' || (error.message && error.message.includes('inbound_orders'))) {
-            if (typeof showToast === 'function') {
-              showToast('Lưu ý Supabase: Chưa tạo bảng inbound_orders! Vui lòng thực thi SQL script config/supabase-schema.sql trên Supabase Dashboard.', 'warning', 8000);
+          }
+          // Retry 3: RLS Policy blocking select() or insert()
+          else if (error.code === '42501' || (error.message && error.message.includes('row-level security'))) {
+            const { error: insErr } = await this.supabase.from('inbound_orders').insert([payload]);
+            if (insErr) {
+              throw new Error('Supabase RLS Chặn: Vui lòng chạy lệnh "ALTER TABLE public.inbound_orders DISABLE ROW LEVEL SECURITY;" trên Supabase SQL Editor!');
             }
           } else {
-            if (typeof showToast === 'function') {
-              showToast('Lỗi lưu Supabase: ' + (error.message || 'Không thể ghi dữ liệu'), 'danger');
-            }
+            throw new Error('Supabase Lỗi: ' + (error.message || 'Không thể ghi dữ liệu'));
           }
         } else if (data && data.length > 0) {
           savedOrder = { ...savedOrder, ...data[0] };

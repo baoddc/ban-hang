@@ -557,13 +557,13 @@ async function submitCreateInbound() {
   };
 
   try {
-    await window.dbProvider.createInboundOrder(orderData, items);
-    showToast('Đã tạo phiếu PR / Inbound thành công (Chờ kho nhập)!', 'success');
+    const resOrder = await window.dbProvider.createInboundOrder(orderData, items);
+    showToast(`Đã tạo phiếu ${resOrder.code || 'PR'} thành công và lưu lên Supabase!`, 'success');
     closeModal('create-inbound-modal');
     await loadInventoryData();
   } catch (err) {
     console.error('Error creating inbound order:', err);
-    showToast('Không thể tạo phiếu Inbound: ' + (err.message || 'Lỗi hệ thống'), 'danger');
+    showToast('Chưa thể lưu Supabase: ' + (err.message || 'Lỗi hệ thống'), 'danger', 10000);
   }
 }
 
