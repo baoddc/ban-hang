@@ -46,7 +46,21 @@ function renderRevenueChart(orders) {
   }
 
   const months = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
-  const revenueData = [150, 220, 180, 290, 310, 250, 420, 380, 0, 0, 0, 0];
+  const revenueData = new Array(12).fill(0);
+
+  if (Array.isArray(orders)) {
+    orders.forEach(o => {
+      if (o.created_at && o.status !== 'Cancelled') {
+        const date = new Date(o.created_at);
+        if (!isNaN(date.getTime())) {
+          const month = date.getMonth(); // 0 - 11
+          revenueData[month] += (o.final_amount || 0) / 1000000;
+        }
+      }
+    });
+  }
+
+  const formattedRevenueData = revenueData.map(v => Math.round(v * 100) / 100);
 
   revenueChartInstance = new Chart(ctx, {
     type: 'bar',
@@ -55,7 +69,7 @@ function renderRevenueChart(orders) {
       datasets: [
         {
           label: 'Doanh thu (Triệu VNĐ)',
-          data: revenueData,
+          data: formattedRevenueData,
           backgroundColor: 'rgba(59, 130, 246, 0.75)',
           borderColor: '#3b82f6',
           borderWidth: 2,
