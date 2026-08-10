@@ -976,11 +976,24 @@ class SupabaseProvider {
     }
   }
 
+  // INBOUND ORDERS / PR MUA HÀNG
   async getInboundOrders() {
     if (this.isLiveMode) {
       try {
         const { data, error } = await this.supabase.from('inbound_orders').select('*').order('created_at', { ascending: false });
-        if (!error && data && data.length > 0) return data;
+        if (!error && data && data.length > 0) {
+          return data.map(row => {
+            let parsedItems = row.items;
+            if (typeof parsedItems === 'string') {
+              try { parsedItems = JSON.parse(parsedItems); } catch (e) { parsedItems = []; }
+            }
+            if (!Array.isArray(parsedItems)) parsedItems = [];
+            return {
+              ...row,
+              items: parsedItems
+            };
+          });
+        }
         if (error && error.code === '42P01') {
           console.warn('Bảng inbound_orders chưa tồn tại trên Supabase Database.');
         }
@@ -988,7 +1001,14 @@ class SupabaseProvider {
         console.error('Error fetching inbound_orders from Supabase:', err);
       }
     }
-    return this.getLocalStorageDb().inbound_orders || [];
+    const localData = this.getLocalStorageDb().inbound_orders || [];
+    return localData.map(row => {
+      let parsedItems = row.items;
+      if (typeof parsedItems === 'string') {
+        try { parsedItems = JSON.parse(parsedItems); } catch (e) { parsedItems = []; }
+      }
+      return { ...row, items: Array.isArray(parsedItems) ? parsedItems : [] };
+    });
   }
 
   async createInboundOrder(orderData, items) {
@@ -1001,7 +1021,7 @@ class SupabaseProvider {
     orderData.status = orderData.status || 'Pending';
     orderData.created_by = orderData.created_by || 'Kỹ thuật';
     orderData.items = items || [];
-    orderData.total_amount = items.reduce((sum, it) => sum + (Number(it.subtotal) || (Number(it.expected_qty || 0) * Number(it.cost_price || 0))), 0);
+    orderData.total_amount = (items || []).reduce((sum, it) => sum + (Number(it.subtotal) || (Number(it.expected_qty || 0) * Number(it.cost_price || 0))), 0);
 
     let savedOrder = { ...orderData };
 
@@ -1036,7 +1056,13 @@ class SupabaseProvider {
             delete payload.supplier_id;
             const { data: fbData, error: fbErr } = await this.supabase.from('inbound_orders').insert([payload]).select();
             if (!fbErr && fbData && fbData.length > 0) {
-              savedOrder.id = fbData[0].id;
+              savedOrder = { ...savedOrder, ...fbData[0] };
+            }
+          } else if (error.message && error.message.includes('items')) {
+            payload.items = JSON.stringify(orderData.items);
+            const { data: fbData, error: fbErr } = await this.supabase.from('inbound_orders').insert([payload]).select();
+            if (!fbErr && fbData && fbData.length > 0) {
+              savedOrder = { ...savedOrder, ...fbData[0] };
             }
           } else if (error.code === '42P01' || (error.message && error.message.includes('inbound_orders'))) {
             if (typeof showToast === 'function') {
@@ -1048,7 +1074,7 @@ class SupabaseProvider {
             }
           }
         } else if (data && data.length > 0) {
-          savedOrder.id = data[0].id;
+          savedOrder = { ...savedOrder, ...data[0] };
         }
       } catch (e) {
         console.error('Supabase createInboundOrder catch error:', e);

@@ -313,9 +313,20 @@ function renderInboundTable(orders) {
   }
 
   tbody.innerHTML = orders.map(o => {
-    const itemCount = (o.items || []).length;
+    let items = o.items;
+    if (typeof items === 'string') {
+      try { items = JSON.parse(items); } catch (e) { items = []; }
+    }
+    if (!Array.isArray(items)) items = [];
+
+    const itemCount = items.length;
     const isPending = o.status === 'Pending';
     const isReceived = o.status === 'Received';
+
+    let totalAmt = Number(o.total_amount) || 0;
+    if (totalAmt === 0 && items.length > 0) {
+      totalAmt = items.reduce((sum, it) => sum + (Number(it.subtotal) || (Number(it.expected_qty || 0) * Number(it.cost_price || 0))), 0);
+    }
 
     let statusBadge = `<span class="badge badge-warning"><i class="bi bi-clock-history"></i> Chờ nhập kho</span>`;
     if (isReceived) {
@@ -334,7 +345,7 @@ function renderInboundTable(orders) {
           <small class="text-muted">Hạn: ${o.expected_date || 'N/A'}</small>
         </td>
         <td><span class="badge badge-neutral">${itemCount} mặt hàng</span></td>
-        <td style="font-weight:700; color:var(--primary);">${formatVND(o.total_amount)}</td>
+        <td style="font-weight:700; color:var(--primary);">${formatVND(totalAmt)}</td>
         <td>${statusBadge}</td>
         <td>
           ${isPending ? `
@@ -558,8 +569,14 @@ async function submitCreateInbound() {
 
 // Modal 2: Inherit & Fulfill Inbound
 function openFulfillInboundModal(inboundId) {
-  const inbound = (allInboundOrdersList || []).find(o => o.id === inboundId);
+  const inbound = (allInboundOrdersList || []).find(o => o.id === inboundId || o.code === inboundId);
   if (!inbound) return;
+
+  let items = inbound.items;
+  if (typeof items === 'string') {
+    try { items = JSON.parse(items); } catch (e) { items = []; }
+  }
+  if (!Array.isArray(items)) items = [];
 
   document.getElementById('fulfill-inbound-id').value = inbound.id;
   document.getElementById('ful-code').textContent = inbound.code;
@@ -569,12 +586,13 @@ function openFulfillInboundModal(inboundId) {
   const tbody = document.getElementById('fulfill-items-tbody');
   const isPending = inbound.status === 'Pending';
 
-  tbody.innerHTML = (inbound.items || []).map((it, idx) => {
+  tbody.innerHTML = items.map((it, idx) => {
     const recQty = isPending ? (it.received_qty || it.expected_qty) : it.received_qty;
-    const subtotal = recQty * (it.cost_price || 0);
+    const cost = Number(it.cost_price) || 0;
+    const subtotal = recQty * cost;
 
     return `
-      <tr data-prod-id="${it.product_id}" data-sku="${it.product_sku}" data-name="${it.product_name}" data-unit="${it.unit}" data-cost="${it.cost_price}">
+      <tr data-prod-id="${it.product_id}" data-sku="${it.product_sku}" data-name="${it.product_name}" data-unit="${it.unit}" data-cost="${cost}">
         <td><code>${it.product_sku}</code></td>
         <td><strong>${it.product_name}</strong></td>
         <td>${it.expected_qty} ${it.unit || 'Cái'}</td>
@@ -585,7 +603,7 @@ function openFulfillInboundModal(inboundId) {
             <strong style="color:var(--success); font-size:1rem;">${recQty} ${it.unit || 'Cái'}</strong>
           `}
         </td>
-        <td>${formatVND(it.cost_price)}</td>
+        <td>${formatVND(cost)}</td>
         <td class="ful-item-subtotal" style="font-weight:700;">${formatVND(subtotal)}</td>
       </tr>
     `;
