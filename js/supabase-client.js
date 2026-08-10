@@ -976,12 +976,11 @@ class SupabaseProvider {
     }
   }
 
-  // INBOUND ORDERS / PR MUA HÀNG
   async getInboundOrders() {
     if (this.isLiveMode) {
       try {
         const { data, error } = await this.supabase.from('inbound_orders').select('*').order('created_at', { ascending: false });
-        if (!error && data) return data;
+        if (!error && data && data.length > 0) return data;
         if (error && error.code === '42P01') {
           console.warn('Bảng inbound_orders chưa tồn tại trên Supabase Database.');
         }
@@ -1004,14 +1003,21 @@ class SupabaseProvider {
     orderData.items = items || [];
     orderData.total_amount = items.reduce((sum, it) => sum + (Number(it.subtotal) || (Number(it.expected_qty || 0) * Number(it.cost_price || 0))), 0);
 
-    if (!db.inbound_orders) db.inbound_orders = [];
-    db.inbound_orders.unshift(orderData);
+    let savedOrder = { ...orderData };
 
     if (isLive) {
       try {
+        let supplierUuid = null;
+        if (isValidUUID(orderData.supplier_id)) {
+          const { data: custCheck } = await this.supabase.from('customers').select('id').eq('id', orderData.supplier_id);
+          if (custCheck && custCheck.length > 0) {
+            supplierUuid = orderData.supplier_id;
+          }
+        }
+
         const payload = prepareSupabasePayload({
           code: orderData.code,
-          supplier_id: isValidUUID(orderData.supplier_id) ? orderData.supplier_id : null,
+          supplier_id: supplierUuid,
           supplier_name: orderData.supplier_name,
           created_by: orderData.created_by,
           expected_date: orderData.expected_date ? orderData.expected_date : null,
@@ -1021,10 +1027,18 @@ class SupabaseProvider {
           items: orderData.items,
           created_at: orderData.created_at
         });
+
         const { data, error } = await this.supabase.from('inbound_orders').insert([payload]).select();
         if (error) {
-          console.error('Supabase createInboundOrder error:', error);
-          if (error.code === '42P01' || (error.message && error.message.includes('inbound_orders'))) {
+          console.error('Supabase createInboundOrder initial insert error:', error);
+          if (error.code === '23503') {
+            // Foreign key constraint violation retry without supplier_id
+            delete payload.supplier_id;
+            const { data: fbData, error: fbErr } = await this.supabase.from('inbound_orders').insert([payload]).select();
+            if (!fbErr && fbData && fbData.length > 0) {
+              savedOrder.id = fbData[0].id;
+            }
+          } else if (error.code === '42P01' || (error.message && error.message.includes('inbound_orders'))) {
             if (typeof showToast === 'function') {
               showToast('Lưu ý Supabase: Chưa tạo bảng inbound_orders! Vui lòng thực thi SQL script config/supabase-schema.sql trên Supabase Dashboard.', 'warning', 8000);
             }
@@ -1034,15 +1048,23 @@ class SupabaseProvider {
             }
           }
         } else if (data && data.length > 0) {
-          orderData.id = data[0].id;
+          savedOrder.id = data[0].id;
         }
       } catch (e) {
         console.error('Supabase createInboundOrder catch error:', e);
       }
     }
 
+    if (!db.inbound_orders) db.inbound_orders = [];
+    const existingIdx = db.inbound_orders.findIndex(o => o.id === savedOrder.id || o.code === savedOrder.code);
+    if (existingIdx !== -1) {
+      db.inbound_orders[existingIdx] = savedOrder;
+    } else {
+      db.inbound_orders.unshift(savedOrder);
+    }
+
     this.saveLocalStorageDb(db);
-    return orderData;
+    return savedOrder;
   }
 
   async fulfillInboundOrder(inboundId, itemsWithReceivedQty, receivedBy, notes) {
