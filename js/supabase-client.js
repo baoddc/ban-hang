@@ -1154,10 +1154,9 @@ class SupabaseProvider {
         if (localProd) localProd.stock_quantity = newStock;
 
         // Record stock transaction in Thẻ Kho
-        if (!db.inventory_transactions) db.inventory_transactions = [];
-        db.inventory_transactions.unshift({
+        const txObj = {
           id: 'it_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
-          code: 'NK-' + inbound.code,
+          code: 'NK-' + inbound.code + '-' + (Math.floor(100 + Math.random() * 900)),
           type: 'StockIn',
           product_name: prod.name,
           quantity: recQty,
@@ -1165,13 +1164,35 @@ class SupabaseProvider {
           new_stock: newStock,
           reason: `Kế thừa nhập kho từ đơn Inbound ${inbound.code} (NCC: ${inbound.supplier_name})`,
           created_at: new Date().toISOString()
-        });
+        };
+
+        if (!db.inventory_transactions) db.inventory_transactions = [];
+        db.inventory_transactions.unshift(txObj);
 
         if (isLive) {
           if (isValidUUID(prod.id)) {
             this.supabase.from('products').update({ stock_quantity: newStock }).eq('id', prod.id).then();
           } else if (prod.sku) {
             this.supabase.from('products').update({ stock_quantity: newStock }).eq('sku', prod.sku).then();
+          }
+
+          try {
+            const txPayload = prepareSupabasePayload({
+              code: txObj.code,
+              type: txObj.type,
+              product_id: isValidUUID(prod.id) ? prod.id : null,
+              product_name: prod.name,
+              quantity: recQty,
+              previous_stock: prevStock,
+              new_stock: newStock,
+              reason: txObj.reason,
+              created_at: txObj.created_at
+            });
+            this.supabase.from('inventory_transactions').insert([txPayload]).then(({ error }) => {
+              if (error) console.error('Supabase inventory_transactions insert error:', error);
+            });
+          } catch (e) {
+            console.error('Supabase inventory_transactions catch error:', e);
           }
         }
       }
