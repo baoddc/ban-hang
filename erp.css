@@ -1,0 +1,34 @@
+/* =======================================================
+   ERP DASHBOARD SPECIFIC STYLES (ERP.CSS)
+   ======================================================= */
+
+.dashboard-charts-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.chart-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-container {
+  position: relative;
+  height: 300px;
+  width: 100%;
+}
+
+.dashboard-tables-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-charts-grid,
+  .dashboard-tables-grid {
+    grid-template-columns: 1fr;
+  }
+}

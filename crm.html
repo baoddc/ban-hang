@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM & Khách Hàng - APEX ERP</title>
+  <!-- Bootstrap Icons CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!-- Supabase JS Client CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="crm.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <div class="brand-icon"><i class="bi bi-box-seam-fill"></i></div>
+        <div>
+          <div class="brand-title">APEX ERP</div>
+          <div class="brand-subtitle">Enterprise Suite</div>
+        </div>
+      </div>
+
+      <ul class="sidebar-menu">
+        <li class="menu-category">Menu Chính</li>
+        <li>
+          <a href="index.html" class="nav-link">
+            <i class="bi bi-speedometer2"></i>
+            <span>ERP Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a href="ban-hang.html" class="nav-link">
+            <i class="bi bi-cart3"></i>
+            <span>Bán Hàng & POS</span>
+          </a>
+        </li>
+        <li>
+          <a href="cong-no.html" class="nav-link">
+            <i class="bi bi-cash-stack"></i>
+            <span>Quản Lý Công Nợ</span>
+          </a>
+        </li>
+        <li>
+          <a href="crm.html" class="nav-link active">
+            <i class="bi bi-people-fill"></i>
+            <span>CRM & Khách Hàng</span>
+          </a>
+        </li>
+        <li>
+          <a href="kho-bai.html" class="nav-link">
+            <i class="bi bi-boxes"></i>
+            <span>Quản Lý Kho Bãi</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <div id="supabase-status-badge" class="supabase-status-badge">
+          <i class="bi bi-hdd-fill"></i> Demo Engine
+        </div>
+        <button class="btn btn-icon" onclick="openModal('supabase-config-modal')">
+          <i class="bi bi-gear-fill"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="app-main">
+      <!-- Top Header -->
+      <header class="app-header">
+        <div class="page-title-group">
+          <h1>Quản Lý Khách Hàng & Quy Trình Bán Hàng (CRM Pipeline)</h1>
+          <p>Theo dõi lead tiềm năng, quản lý cơ hội kinh doanh và phễu chuyển đổi khách hàng</p>
+        </div>
+
+        <div class="header-actions">
+          <button class="btn btn-secondary" onclick="switchCrmTab('directory')">
+            <i class="bi bi-person-lines-fill"></i> Danh Sách Khách Hàng
+          </button>
+          <button class="btn btn-primary" onclick="openNewLeadModal()">
+            <i class="bi bi-person-plus-fill"></i> Thêm Cơ Hội / Lead Mới
+          </button>
+        </div>
+      </header>
+
+      <!-- Content Body -->
+      <div class="content-body">
+        
+        <!-- View Toggle Sub-Header -->
+        <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap:wrap;">
+          <button id="btn-tab-pipeline" class="pill active" onclick="switchCrmTab('pipeline')">
+            <i class="bi bi-kanban"></i> Bảng Pipeline Sales (Kanban)
+          </button>
+          <button id="btn-tab-directory" class="pill" onclick="switchCrmTab('directory')">
+            <i class="bi bi-people"></i> Hồ Sơ Khách Hàng Doanh Nghiệp
+          </button>
+          <button id="btn-tab-report" class="pill" onclick="switchCrmTab('report')">
+            <i class="bi bi-bar-chart-fill"></i> 📊 Báo Cáo Tổng Hợp Sản Phẩm Mua Theo Khách Hàng
+          </button>
+        </div>
+
+        <!-- PIPELINE KANBAN VIEW -->
+        <div id="crm-pipeline-view">
+          <div class="kanban-board" id="kanban-board">
+            <!-- Kanban columns rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- CUSTOMER DIRECTORY VIEW -->
+        <div id="crm-directory-view" style="display: none;">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="bi bi-building text-primary"></i> Danh Sách Khách Hàng & Đối Tác</div>
+              <button class="btn btn-primary" style="padding: 6px 12px; font-size: 0.82rem;" onclick="openNewCustomerModal()">
+                <i class="bi bi-plus-lg"></i> Khách Hàng Mới
+              </button>
+            </div>
+            <div class="table-container">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>Tuyến Công Tác</th>
+                    <th>Sales Phụ Trách</th>
+                    <th>Mã KH</th>
+                    <th>Tên Doanh Nghiệp / Cá Nhân</th>
+                    <th>Số Điện Thoại</th>
+                    <th>Email</th>
+                    <th>Phân Nhóm</th>
+                    <th>Công Nợ Hiện Tại</th>
+                    <th>Thao Tác</th>
+                  </tr>
+                </thead>
+                <tbody id="customers-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- GLOBAL CUSTOMER PRODUCT PURCHASE REPORT VIEW -->
+        <div id="crm-report-view" style="display: none;">
+          <!-- Filter Controls Card -->
+          <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header" style="margin-bottom: 14px;">
+              <div class="card-title">
+                <i class="bi bi-funnel-fill text-primary"></i> Bộ Lọc Báo Cáo Mua Hàng Theo Khách Hàng & Thời Gian
+              </div>
+              <button class="btn btn-secondary" onclick="window.print()">
+                <i class="bi bi-printer"></i> In Báo Cáo
+              </button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; align-items: end;">
+              <div class="form-group" style="margin: 0;">
+                <label class="form-label" style="font-size:0.8rem;">Khách Hàng</label>
+                <select id="report-customer-select" class="form-control" onchange="generateGlobalPurchaseReport()">
+                  <option value="All">-- Tất cả khách hàng --</option>
+                  <!-- Populated dynamically -->
+                </select>
+              </div>
+
+              <div class="form-group" style="margin: 0;">
+                <label class="form-label" style="font-size:0.8rem;">Tìm Sản Phẩm</label>
+                <input type="text" id="report-product-search" class="form-control" placeholder="Tên sản phẩm..." oninput="generateGlobalPurchaseReport()" />
+              </div>
+
+              <div class="form-group" style="margin: 0;">
+                <label class="form-label" style="font-size:0.8rem;">Từ Ngày</label>
+                <input type="date" id="report-date-start" class="form-control" onchange="generateGlobalPurchaseReport()" />
+              </div>
+
+              <div class="form-group" style="margin: 0;">
+                <label class="form-label" style="font-size:0.8rem;">Đến Ngày</label>
+                <input type="date" id="report-date-end" class="form-control" onchange="generateGlobalPurchaseReport()" />
+              </div>
+
+              <div>
+                <button class="btn btn-secondary" style="width:100%; padding:9px;" onclick="resetReportFilters()">
+                  <i class="bi bi-arrow-counterclockwise"></i> Xóa Bộ Lọc
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- KPI Summary Row -->
+          <div class="kpi-grid" style="margin-bottom: 20px;">
+            <div class="kpi-card primary">
+              <div class="kpi-icon primary"><i class="bi bi-people-fill"></i></div>
+              <div class="kpi-info">
+                <span class="kpi-label">Số Khách Hàng Phát Sinh Mua</span>
+                <span class="kpi-value" id="report-kpi-cust-count">0</span>
+              </div>
+            </div>
+            <div class="kpi-card info">
+              <div class="kpi-icon info"><i class="bi bi-box-seam-fill"></i></div>
+              <div class="kpi-info">
+                <span class="kpi-label">Tổng Số Lượng Sản Phẩm Bán</span>
+                <span class="kpi-value" id="report-kpi-qty-count">0</span>
+              </div>
+            </div>
+            <div class="kpi-card success">
+              <div class="kpi-icon success"><i class="bi bi-cash-coin"></i></div>
+              <div class="kpi-info">
+                <span class="kpi-label">Tổng Doanh Số Xuất Bán</span>
+                <span class="kpi-value" id="report-kpi-total-amount">0 ₫</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Report Table Card -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="bi bi-journal-check text-success"></i> Bảng Tổng Hợp Chi Tiết Khách Hàng - Sản Phẩm Mua
+              </div>
+            </div>
+            <div class="table-container">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>STT</th>
+                    <th>Khách Hàng / Doanh Nghiệp</th>
+                    <th>Tên Sản Phẩm Đã Mua</th>
+                    <th>Số Lượng</th>
+                    <th>Đơn Giá</th>
+                    <th>Tổng Thành Tiền</th>
+                    <th>Đơn Hàng Gần Nhất</th>
+                    <th>Ngày Mua</th>
+                  </tr>
+                </thead>
+                <tbody id="global-report-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Create / Edit Lead Modal -->
+  <div class="modal-overlay" id="lead-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title" id="lead-modal-title"><i class="bi bi-person-badge text-primary"></i> Thêm Lead / Cơ Hội Bán Hàng</h3>
+        <button class="btn btn-icon" onclick="closeModal('lead-modal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="lead-edit-id" value="" />
+
+        <div class="form-group">
+          <label class="form-label">Tên Người Liên Hệ *</label>
+          <input type="text" id="lead-name" class="form-control" placeholder="Nguyễn Văn A" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tên Công Ty / Doanh Nghiệp</label>
+          <input type="text" id="lead-company" class="form-control" placeholder="Công ty ABC" />
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Số Điện Thoại</label>
+            <input type="text" id="lead-phone" class="form-control" placeholder="0901234567" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" id="lead-email" class="form-control" placeholder="contact@company.com" />
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Giá Trị Dự Kiến (VNĐ)</label>
+            <input type="text" inputmode="numeric" id="lead-value" class="form-control format-number" placeholder="50.000.000" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Trạng Thái Phễu (Stage)</label>
+            <select id="lead-stage" class="form-control">
+              <option value="Lead">Mới Tiếp Cận</option>
+              <option value="Contacted">Đã Liên Hệ</option>
+              <option value="Proposal">Gửi Báo Giá</option>
+              <option value="Negotiation">Thương Lượng</option>
+              <option value="Won">Chốt Hợp Đồng</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nhân Viên Phụ Trách</label>
+          <input type="text" id="lead-assigned" class="form-control" value="Kinh doanh 1" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ghi Chú Nhu Cầu</label>
+          <textarea id="lead-notes" class="form-control" rows="2" placeholder="Cần tư vấn thiết bị..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('lead-modal')">Hủy</button>
+        <button class="btn btn-primary" onclick="submitCreateLead()"><i class="bi bi-check-circle"></i> <span id="lead-btn-save-label">Lưu Cơ Hội</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create / Edit Customer Modal -->
+  <div class="modal-overlay" id="customer-modal">
+    <div class="modal-box" style="max-width: 620px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="cust-modal-title"><i class="bi bi-person-plus text-primary"></i> Thêm Khách Hàng Mới</h3>
+        <button class="btn btn-icon" onclick="closeModal('customer-modal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="cust-edit-id" value="" />
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Mã Khách Hàng (Mã KH)</label>
+            <input type="text" id="cust-code" class="form-control" placeholder="Tự động (VD: KH001)..." />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tên Khách Hàng / Công Ty *</label>
+            <input type="text" id="cust-name" class="form-control" placeholder="Nhập tên..." />
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Tuyến Công Tác</label>
+            <input type="text" id="cust-route" class="form-control" placeholder="Ví dụ: Tuyến Q.1 - Quận 3" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sales Phụ Trách</label>
+            <input type="text" id="cust-sales" class="form-control" placeholder="Ví dụ: Nguyễn Văn A" />
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Số Điện Thoại</label>
+            <input type="text" id="cust-phone" class="form-control" placeholder="090..." />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" id="cust-email" class="form-control" placeholder="email@domain.com" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Phân Nhóm Khách Hàng</label>
+          <select id="cust-group" class="form-control">
+            <option value="Khách thường">Khách thường</option>
+            <option value="VIP">VIP</option>
+            <option value="Đại lý">Đại lý</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Địa Chỉ Giao Hàng</label>
+          <textarea id="cust-address" class="form-control" rows="2" placeholder="Địa chỉ giao hàng..."></textarea>
+        </div>
+
+        <div id="cust-debt-info-notice" style="display:none; background:var(--bg-subtle); padding:10px 14px; border-radius:var(--radius-md); border-left:4px solid var(--info); font-size:0.8rem; color:var(--text-muted); margin-top:8px;">
+          <i class="bi bi-info-circle text-info"></i> <strong>Công nợ hiện tại:</strong> <span id="cust-debt-val" style="font-weight:700; color:var(--danger);">0 ₫</span> <br/><span style="font-size:0.75rem; color:var(--text-subtle);">(Công nợ được hạch toán tự động từ sổ nợ & đơn bán hàng, không chỉnh sửa trực tiếp).</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('customer-modal')">Hủy</button>
+        <button class="btn btn-primary" onclick="submitCreateCustomer()"><i class="bi bi-check-circle"></i> <span id="cust-btn-save-label">Lưu Khách Hàng</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer Complete History & Ledger Modal (360°) -->
+  <div class="modal-overlay" id="customer-ledger-modal">
+    <div class="modal-box" style="max-width: 820px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="cust-ledger-title"><i class="bi bi-person-lines-fill text-primary"></i> Hồ Sơ & Lịch Sử Giao Dịch Khách Hàng</h3>
+        <button class="btn btn-icon" onclick="closeModal('customer-ledger-modal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body">
+        <!-- Customer KPI Summary Row -->
+        <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 20px;">
+          <div class="kpi-card primary" style="padding:12px 16px;">
+            <div class="kpi-info">
+              <span class="kpi-label">Tổng Mua Hàng</span>
+              <span class="kpi-value" id="cust-kpi-purchases" style="font-size:1.15rem;">0 ₫</span>
+            </div>
+          </div>
+          <div class="kpi-card warning" style="padding:12px 16px;">
+            <div class="kpi-info">
+              <span class="kpi-label">Tổng Trả Hàng</span>
+              <span class="kpi-value" id="cust-kpi-returns" style="font-size:1.15rem;">0 ₫</span>
+            </div>
+          </div>
+          <div class="kpi-card danger" style="padding:12px 16px;">
+            <div class="kpi-info">
+              <span class="kpi-label">Công Nợ Còn Nợ</span>
+              <span class="kpi-value" id="cust-kpi-debt" style="font-size:1.15rem;">0 ₫</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Date Range Filter Bar for Customer Ledger -->
+        <div style="background:var(--bg-subtle); padding:12px 16px; border-radius:var(--radius-md); margin-bottom:18px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+          <span style="font-size:0.85rem; font-weight:700;"><i class="bi bi-calendar-range text-primary"></i> Khoảng thời gian:</span>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <label style="font-size:0.8rem;">Từ:</label>
+            <input type="date" id="cust-date-start" class="form-control" style="width:145px; padding:4px 8px; font-size:0.82rem;" onchange="filterCustomerHistoryByDate()" />
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <label style="font-size:0.8rem;">Đến:</label>
+            <input type="date" id="cust-date-end" class="form-control" style="width:145px; padding:4px 8px; font-size:0.82rem;" onchange="filterCustomerHistoryByDate()" />
+          </div>
+          <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.8rem;" onclick="resetCustomerDateFilter()">
+            <i class="bi bi-arrow-counterclockwise"></i> Tất cả thời gian
+          </button>
+        </div>
+
+        <!-- History Sub-Tabs -->
+        <div style="margin-bottom: 16px; display: flex; gap: 8px; flex-wrap:wrap;">
+          <button id="btn-cust-tab-orders" class="pill active" onclick="switchCustomerSubTab('orders')">
+            <i class="bi bi-cart-check"></i> Đơn Bán Hàng (<span id="cust-orders-count">0</span>)
+          </button>
+          <button id="btn-cust-tab-products" class="pill" onclick="switchCustomerSubTab('products')">
+            <i class="bi bi-box-seam-fill"></i> Chi Tiết Sản Phẩm Đã Mua (<span id="cust-products-count">0</span>)
+          </button>
+          <button id="btn-cust-tab-returns" class="pill" onclick="switchCustomerSubTab('returns')">
+            <i class="bi bi-arrow-counterclockwise"></i> Lịch Sử Trả Hàng (<span id="cust-returns-count">0</span>)
+          </button>
+          <button id="btn-cust-tab-payments" class="pill" onclick="switchCustomerSubTab('payments')">
+            <i class="bi bi-wallet2"></i> Thanh Toán Công Nợ (<span id="cust-payments-count">0</span>)
+          </button>
+        </div>
+
+        <!-- Tab 1: Orders -->
+        <div id="cust-subtab-orders">
+          <div class="table-container">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Mã Đơn</th>
+                  <th>Tổng Tiền</th>
+                  <th>Đã Trả</th>
+                  <th>Còn Nợ</th>
+                  <th>Hình Thức</th>
+                  <th>Thời Gian</th>
+                </tr>
+              </thead>
+              <tbody id="cust-orders-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab 2: Products Breakdown (Mặt hàng sản phẩm đã mua) -->
+        <div id="cust-subtab-products" style="display: none;">
+          <div class="table-container">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Tên Sản Phẩm</th>
+                  <th>Số Lượng Mua</th>
+                  <th>Đơn Giá Bán</th>
+                  <th>Thành Tiền</th>
+                  <th>Mã Đơn Hàng</th>
+                  <th>Ngày Mua</th>
+                </tr>
+              </thead>
+              <tbody id="cust-products-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab 2: Returns -->
+        <div id="cust-subtab-returns" style="display: none;">
+          <div class="table-container">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Mã Phiếu Trả</th>
+                  <th>Mã Đơn Gốc</th>
+                  <th>Số Tiền Hoàn Trả</th>
+                  <th>Hình Thức Xử Lý</th>
+                  <th>Lý Do</th>
+                  <th>Thời Gian</th>
+                </tr>
+              </thead>
+              <tbody id="cust-returns-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab 3: Debt Payments -->
+        <div id="cust-subtab-payments" style="display: none;">
+          <div class="table-container">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Mã Phiếu Thu</th>
+                  <th>Khoản Nợ</th>
+                  <th>Số Tiền Thanh Toán</th>
+                  <th>Hình Thức</th>
+                  <th>Ghi Chú</th>
+                  <th>Thời Gian</th>
+                </tr>
+              </thead>
+              <tbody id="cust-payments-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('customer-ledger-modal')">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shared Scripts & CRM JS -->
+  <script src="js/supabase-client.js"></script>
+  <script src="js/common.js"></script>
+  <script src="crm.js"></script>
+</body>
+</html>

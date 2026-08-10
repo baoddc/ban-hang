@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản Lý Kho Bãi - APEX ERP</title>
+  <!-- Bootstrap Icons CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!-- Supabase JS Client CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="inventory.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <div class="brand-icon"><i class="bi bi-box-seam-fill"></i></div>
+        <div>
+          <div class="brand-title">APEX ERP</div>
+          <div class="brand-subtitle">Enterprise Suite</div>
+        </div>
+      </div>
+
+      <ul class="sidebar-menu">
+        <li class="menu-category">Menu Chính</li>
+        <li>
+          <a href="index.html" class="nav-link">
+            <i class="bi bi-speedometer2"></i>
+            <span>ERP Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a href="ban-hang.html" class="nav-link">
+            <i class="bi bi-cart3"></i>
+            <span>Bán Hàng & POS</span>
+          </a>
+        </li>
+        <li>
+          <a href="cong-no.html" class="nav-link">
+            <i class="bi bi-cash-stack"></i>
+            <span>Quản Lý Công Nợ</span>
+          </a>
+        </li>
+        <li>
+          <a href="crm.html" class="nav-link">
+            <i class="bi bi-people-fill"></i>
+            <span>CRM & Khách Hàng</span>
+          </a>
+        </li>
+        <li>
+          <a href="kho-bai.html" class="nav-link active">
+            <i class="bi bi-boxes"></i>
+            <span>Quản Lý Kho Bãi</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <div id="supabase-status-badge" class="supabase-status-badge">
+          <i class="bi bi-hdd-fill"></i> Demo Engine
+        </div>
+        <button class="btn btn-icon" onclick="openModal('supabase-config-modal')">
+          <i class="bi bi-gear-fill"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="app-main">
+      <!-- Top Header -->
+      <header class="app-header">
+        <div class="page-title-group">
+          <h1>Quản Lý Kho Bãi & Kiểm Kê Hàng Hóa</h1>
+          <p>Kiểm soát số lượng tồn kho, tạo phiếu nhập/xuất kho và truy xuất thẻ kho chi tiết</p>
+        </div>
+
+        <div class="header-actions">
+          <button class="btn btn-secondary" onclick="openStockTxModal()">
+            <i class="bi bi-arrow-down-up"></i> Nhập / Xuất Kho
+          </button>
+          <button class="btn btn-primary" onclick="openNewProductModal()">
+            <i class="bi bi-plus-circle-fill"></i> Thêm Sản Phẩm Mới
+          </button>
+        </div>
+      </header>
+
+      <!-- Content Body -->
+      <div class="content-body">
+
+        <!-- KPI Summary Cards -->
+        <div class="kpi-grid">
+          <div class="kpi-card primary">
+            <div class="kpi-icon primary"><i class="bi bi-boxes"></i></div>
+            <div class="kpi-info">
+              <span class="kpi-label">Tổng Danh Mục Sản Phẩm</span>
+              <span class="kpi-value" id="inv-total-skus">0 SKUs</span>
+              <span class="kpi-subtext positive">Đang quản lý trong kho</span>
+            </div>
+          </div>
+
+          <div class="kpi-card info">
+            <div class="kpi-icon info"><i class="bi bi-bank"></i></div>
+            <div class="kpi-info">
+              <span class="kpi-label">Tổng Giá Trị Kho (Giá Nhập)</span>
+              <span class="kpi-value" id="inv-total-valuation">0 ₫</span>
+              <span class="kpi-subtext">Định giá tài sản tồn kho</span>
+            </div>
+          </div>
+
+          <div class="kpi-card danger">
+            <div class="kpi-icon danger"><i class="bi bi-exclamation-triangle-fill"></i></div>
+            <div class="kpi-info">
+              <span class="kpi-label">Sản Phẩm Cảnh Báo Hết</span>
+              <span class="kpi-value" id="inv-low-stock-count">0</span>
+              <span class="kpi-subtext negative">Dưới ngưỡng định mức</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- View Tabs -->
+        <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+          <button id="btn-tab-products" class="pill active" onclick="switchInventoryTab('products')">
+            <i class="bi bi-box-seam"></i> Danh Mục Tồn Kho & Giá
+          </button>
+          <button id="btn-tab-ledger" class="pill" onclick="switchInventoryTab('ledger')">
+            <i class="bi bi-journal-text"></i> Thẻ Kho (Nhật Ký Biến Động)
+          </button>
+        </div>
+
+        <!-- PRODUCTS INVENTORY VIEW -->
+        <div id="inv-products-view">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="bi bi-boxes text-primary"></i> Bảng Chi Tiết Hàng Hóa Tồn Kho</div>
+              <div class="search-box" style="width:260px;">
+                <i class="bi bi-search"></i>
+                <input type="text" id="inv-search-input" placeholder="Tìm theo tên, SKU, vị trí..." oninput="filterInventoryTable()" />
+              </div>
+            </div>
+            <div class="table-container">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>SKU</th>
+                    <th>Tên Sản Phẩm</th>
+                    <th>Danh Mục</th>
+                    <th>Vị Trí Kho</th>
+                    <th>Giá Nhập</th>
+                    <th>Giá Bán</th>
+                    <th>Số Lượng Tồn</th>
+                    <th>Trạng Thái</th>
+                    <th>Thao Tác</th>
+                  </tr>
+                </thead>
+                <tbody id="inventory-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- STOCK LEDGER VIEW -->
+        <div id="inv-ledger-view" style="display: none;">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="bi bi-journal-arrow-down text-accent"></i> Nhật Ký Biến Động Nhập / Xuất Kho (Thẻ Kho)</div>
+            </div>
+            <div class="table-container">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>Mã Phiếu</th>
+                    <th>Loại Giao Dịch</th>
+                    <th>Tên Sản Phẩm</th>
+                    <th>Số Lượng</th>
+                    <th>Tồn Trước</th>
+                    <th>Tồn Sau</th>
+                    <th>Lý Do / Chứng Từ</th>
+                    <th>Thời Gian</th>
+                  </tr>
+                </thead>
+                <tbody id="ledger-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Create New Product Modal -->
+  <div class="modal-overlay" id="product-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="bi bi-plus-box text-primary"></i> Thêm Sản Phẩm Vấn Kho Mới</h3>
+        <button class="btn btn-icon" onclick="closeModal('product-modal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Mã SKU Sản Phẩm</label>
+          <input type="text" id="prod-sku" class="form-control" placeholder="LAP-DEL-02" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tên Sản Phẩm</label>
+          <input type="text" id="prod-name" class="form-control" placeholder="Tên thiết bị..." />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Danh Mục</label>
+          <input type="text" id="prod-category" class="form-control" placeholder="Máy tính, Phụ kiện..." />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Đơn Vị Tính</label>
+          <input type="text" id="prod-unit" class="form-control" value="Cái" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Giá Nhập Kho (VNĐ)</label>
+          <input type="text" inputmode="numeric" id="prod-cost" class="form-control format-number" placeholder="10.000.000" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Giá Bán Niêm Yết (VNĐ)</label>
+          <input type="text" inputmode="numeric" id="prod-price" class="form-control format-number" placeholder="12.500.000" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Số Lượng Nhập Đầu Kỳ</label>
+          <input type="text" inputmode="numeric" id="prod-stock" class="form-control format-number" value="10" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Vị Trí Lưu Kho</label>
+          <input type="text" id="prod-location" class="form-control" value="Khu A - Kệ 01" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('product-modal')">Hủy</button>
+        <button class="btn btn-primary" onclick="submitCreateProduct()"><i class="bi bi-check-circle"></i> Tạo Sản Phẩm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stock In / Stock Out Adjustment Modal -->
+  <div class="modal-overlay" id="stock-tx-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="bi bi-arrow-down-up text-warning"></i> Lập Phiếu Nhập / Xuất Kho</h3>
+        <button class="btn btn-icon" onclick="closeModal('stock-tx-modal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Chọn Sản Phẩm</label>
+          <select id="tx-product-select" class="form-control">
+            <!-- Loaded dynamically -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Loại Giao Dịch Kho</label>
+          <select id="tx-type-select" class="form-control">
+            <option value="StockIn">Nhập Kho (Thêm số lượng)</option>
+            <option value="StockOut">Xuất Kho (Trừ số lượng)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Số Lượng Giao Dịch</label>
+          <input type="text" inputmode="numeric" id="tx-qty-input" class="form-control format-number" value="1" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Lý Do / Ghi Chú Chứng Từ</label>
+          <textarea id="tx-reason-input" class="form-control" rows="2" placeholder="Nhập từ nhà cung cấp / Xuất kiểm kê..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('stock-tx-modal')">Hủy</button>
+        <button class="btn btn-primary" onclick="submitStockTransaction()"><i class="bi bi-check-circle"></i> Ghi Nhận Kho</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shared Scripts & Inventory JS -->
+  <script src="js/supabase-client.js"></script>
+  <script src="js/common.js"></script>
+  <script src="inventory.js"></script>
+</body>
+</html>

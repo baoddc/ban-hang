@@ -1,0 +1,16 @@
+/* =======================================================
+   INVENTORY & WAREHOUSE STYLES (INVENTORY.CSS)
+   ======================================================= */
+
+.stock-tag {
+  font-weight: 800;
+  font-size: 0.92rem;
+}
+
+.stock-tag.low {
+  color: var(--danger);
+}
+
+.stock-tag.ok {
+  color: var(--success);
+}

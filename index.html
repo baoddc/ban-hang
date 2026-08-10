@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ERP Dashboard - Hệ Thống Quản Trị Doanh Nghiệp</title>
+  <!-- Bootstrap Icons CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Supabase JS Client CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- Common Styles & ERP Custom Styles -->
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="erp.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <div class="brand-icon"><i class="bi bi-box-seam-fill"></i></div>
+        <div>
+          <div class="brand-title">APEX ERP</div>
+          <div class="brand-subtitle">Enterprise Suite</div>
+        </div>
+      </div>
+
+      <ul class="sidebar-menu">
+        <li class="menu-category">Menu Chính</li>
+        <li>
+          <a href="index.html" class="nav-link active">
+            <i class="bi bi-speedometer2"></i>
+            <span>ERP Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a href="ban-hang.html" class="nav-link">
+            <i class="bi bi-cart3"></i>
+            <span>Bán Hàng & POS</span>
+          </a>
+        </li>
+        <li>
+          <a href="cong-no.html" class="nav-link">
+            <i class="bi bi-cash-stack"></i>
+            <span>Quản Lý Công Nợ</span>
+          </a>
+        </li>
+        <li>
+          <a href="crm.html" class="nav-link">
+            <i class="bi bi-people-fill"></i>
+            <span>CRM & Khách Hàng</span>
+          </a>
+        </li>
+        <li>
+          <a href="kho-bai.html" class="nav-link">
+            <i class="bi bi-boxes"></i>
+            <span>Quản Lý Kho Bãi</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <div id="supabase-status-badge" class="supabase-status-badge">
+          <i class="bi bi-hdd-fill"></i> Demo Engine
+        </div>
+        <button class="btn btn-icon" onclick="openModal('supabase-config-modal')" title="Cấu hình Supabase">
+          <i class="bi bi-gear-fill"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="app-main">
+      <!-- Header Bar -->
+      <header class="app-header">
+        <div class="page-title-group">
+          <h1>Tổng Quan ERP Doanh Nghiệp</h1>
+          <p>Báo cáo hiệu suất kinh doanh, dòng tiền và cảnh báo tồn kho thời gian thực</p>
+        </div>
+
+        <div class="header-actions">
+          <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" placeholder="Tìm kiếm nhanh hệ thống...">
+          </div>
+          <a href="ban-hang.html" class="btn btn-primary">
+            <i class="bi bi-plus-circle-fill"></i> Bán Hàng Mới
+          </a>
+        </div>
+      </header>
+
+      <!-- Dashboard Content Body -->
+      <div class="content-body">
+        <!-- KPI Cards Grid -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-icon primary"><i class="bi bi-currency-dollar"></i></div>
+            <div class="kpi-info">
+              <span class="kpi-label">Tổng Doanh Thu</span>
+              <span class="kpi-value" id="kpi-revenue">0 ₫</span>
+              <span class="kpi-subtext positive"><i class="bi bi-graph-up-arrow"></i> +14.2% so với tháng trước</span>
+            </div>
+          </div>
+
+          <div class="kpi-card danger">
+            <div class="kpi-icon danger"><i class="bi bi-exclamation-octagon-fill"></i></div>
+            <div class="kpi-info">
+              <span class="kpi-label">Công Nợ Phải Thu</span>
+              <span class="kpi-value" id="kpi-receivables">0 ₫</span>
+              <span class="kpi-subtext negative"><i class="bi bi-clock-history"></i> Cần theo dõi thu nợ</span>
+            </div>
+          </div>
+
+          <div class="kpi-card info">
+            <div class="kpi-icon info"><i class="bi bi-box-fill"></i></div>
+            <div class="kpi-info">
+              <span class="kpi-label">Giá Trị Tồn Kho</span>
+              <span class="kpi-value" id="kpi-inventory-val">0 ₫</span>
+              <span class="kpi-subtext positive"><i class="bi bi-shield-check"></i> Đủ đáp ứng kinh doanh</span>
+            </div>
+          </div>
+
+          <div class="kpi-card success">
+            <div class="kpi-icon success"><i class="bi bi-person-lines-fill"></i></div>
+            <div class="kpi-info">
+              <span class="kpi-label">Cơ Hội CRM Mới</span>
+              <span class="kpi-value" id="kpi-leads-count">0</span>
+              <span class="kpi-subtext positive"><i class="bi bi-funnel-fill"></i> Tỷ lệ chuyển đổi tốt</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Layout Grid -->
+        <div class="dashboard-charts-grid">
+          <!-- Main Revenue Trend Chart -->
+          <div class="card chart-card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="bi bi-bar-chart-line-fill text-primary"></i> Biểu Đồ Doanh Thu & Dòng Tiền (2026)
+              </div>
+              <div style="font-size: 0.82rem; color: var(--text-muted);">Tự động đồng bộ Supabase</div>
+            </div>
+            <div class="chart-container">
+              <canvas id="revenueChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Inventory Category Share Chart -->
+          <div class="card chart-card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="bi bi-pie-chart-fill text-accent"></i> Cơ Cấu Sản Phẩm Tồn Kho
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="inventoryChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tables Section Grid -->
+        <div class="dashboard-tables-grid">
+          <!-- Recent Orders -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="bi bi-receipt text-primary"></i> Đơn Bán Hàng Gần Đây
+              </div>
+              <a href="ban-hang.html" style="font-size: 0.85rem; font-weight: 600; color: var(--primary); text-decoration: none;">Xem Tất Cả &rarr;</a>
+            </div>
+            <div class="table-container">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>Mã Đơn</th>
+                    <th>Khách Hàng</th>
+                    <th>Tổng Tiền</th>
+                    <th>Trạng Thái</th>
+                    <th>Ngày Tạo</th>
+                  </tr>
+                </thead>
+                <tbody id="recent-orders-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Inventory Alerts -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="bi bi-bell-fill text-warning"></i> Cảnh Báo Tồn Kho Thấp
+              </div>
+              <a href="kho-bai.html" style="font-size: 0.85rem; font-weight: 600; color: var(--primary); text-decoration: none;">Nhập Kho &rarr;</a>
+            </div>
+            <div class="table-container">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>SKU</th>
+                    <th>Tên Sản Phẩm</th>
+                    <th>Tồn Kho</th>
+                    <th>Ngưỡng</th>
+                    <th>Trạng Thái</th>
+                  </tr>
+                </thead>
+                <tbody id="low-stock-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Shared Scripts & ERP Page Logic -->
+  <script src="js/supabase-client.js"></script>
+  <script src="js/common.js"></script>
+  <script src="erp.js"></script>
+</body>
+</html>
