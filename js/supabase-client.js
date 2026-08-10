@@ -8,10 +8,10 @@ const LOCAL_STORAGE_DB_KEY = 'ERP_LOCAL_DATABASE_V1';
 // Default initial data for enterprise fallback
 const DEFAULT_INITIAL_DATA = {
   customers: [
-    { id: 'c1', code: 'KH001', name: 'Công ty TNHH Công Nghệ Việt', phone: '0901234567', email: 'contact@viettech.com', address: '123 Lê Lợi, Q.1, TP.HCM', type: 'Customer', group_name: 'VIP', current_debt: 15500000, route: 'Tuyến Q.1 - Q.3', sales_person: 'Nguyễn Thanh Tùng', created_at: '2026-08-01' },
-    { id: 'c2', code: 'KH002', name: 'Tập đoàn Bán Lẻ An Phát', phone: '0912345678', email: 'purchasing@anphat.vn', address: '456 Nguyễn Huệ, Q.1, TP.HCM', type: 'Customer', group_name: 'Đại lý', current_debt: 42000000, route: 'Tuyến Q.1 - Phố Đi Bộ', sales_person: 'Lê Thu Hà', created_at: '2026-08-02' },
-    { id: 'c3', code: 'KH003', name: 'Cửa Hàng Điện Máy Minh Khoa', phone: '0987654321', email: 'minhkhoa@gmail.com', address: '789 Trần Hưng Đạo, Q.5, TP.HCM', type: 'Customer', group_name: 'Khách thường', current_debt: 0, route: 'Tuyến Q.5 - Chợ Lớn', sales_person: 'Trần Văn Nam', created_at: '2026-08-05' },
-    { id: 'c4', code: 'NCC01', name: 'Tổng Kho Linh Kiện Nam Sài Gòn', phone: '02838999888', email: 'sale@namsaigon.com', address: '12 KCN Tân Bình, TP.HCM', type: 'Supplier', group_name: 'Đại lý', current_debt: -28000000, route: 'Tuyến Tân Bình - Hóc Môn', sales_person: 'Nguyễn Thanh Tùng', created_at: '2026-08-03' }
+    { id: 'c1', code: 'KH001', name: 'Công ty TNHH Công Nghệ Việt', phone: '0901234567', email: '5.2 km', address: '123 Lê Lợi, Q.1, TP.HCM', type: 'Customer', group_name: 'VIP', current_debt: 15500000, route: 'Tuyến Q.1 - Q.3', sales_person: 'Nguyễn Thanh Tùng', created_at: '2026-08-01' },
+    { id: 'c2', code: 'KH002', name: 'Tập đoàn Bán Lẻ An Phát', phone: '0912345678', email: '12 km', address: '456 Nguyễn Huệ, Q.1, TP.HCM', type: 'Customer', group_name: 'Đại lý', current_debt: 42000000, route: 'Tuyến Q.1 - Phố Đi Bộ', sales_person: 'Lê Thu Hà', created_at: '2026-08-02' },
+    { id: 'c3', code: 'KH003', name: 'Cửa Hàng Điện Máy Minh Khoa', phone: '0987654321', email: '8.5 km', address: '789 Trần Hưng Đạo, Q.5, TP.HCM', type: 'Customer', group_name: 'Khách thường', current_debt: 0, route: 'Tuyến Q.5 - Chợ Lớn', sales_person: 'Trần Văn Nam', created_at: '2026-08-05' },
+    { id: 'c4', code: 'NCC01', name: 'Tổng Kho Linh Kiện Nam Sài Gòn', phone: '02838999888', email: '15 km', address: '12 KCN Tân Bình, TP.HCM', type: 'Supplier', group_name: 'Đại lý', current_debt: -28000000, route: 'Tuyến Tân Bình - Hóc Môn', sales_person: 'Nguyễn Thanh Tùng', created_at: '2026-08-03' }
   ],
   products: [
     { id: 'p1', sku: 'LAP-DEL-01', name: 'Laptop Dell XPS 13 i7 16GB', category: 'Máy tính', unit: 'Cái', cost_price: 22000000, selling_price: 26900000, stock_quantity: 14, min_stock_alert: 3, location: 'Khu A - Kệ 01' },
@@ -49,8 +49,39 @@ const DEFAULT_INITIAL_DATA = {
   ],
   returns: [
     { id: 'ret1', return_code: 'TH20260801', order_code: 'HD20260801', customer_name: 'Công ty TNHH Công Nghệ Việt', total_refund: 2450000, refund_method: 'DebtDeduction', reason: 'Khách hàng đổi trả 1 Chuột MX Master 3S', created_at: '2026-08-07T15:20:00Z' }
+  ],
+  inbound_orders: [
+    {
+      id: 'inb_1',
+      code: 'PR20260810-01',
+      supplier_id: 'c4',
+      supplier_name: 'Tổng Kho Linh Kiện Nam Sài Gòn',
+      created_by: 'Kỹ thuật - Nguyễn Văn Kỷ',
+      expected_date: '2026-08-15',
+      status: 'Pending',
+      notes: 'Nhập bổ sung linh kiện máy chủ Dell PowerEdge',
+      total_amount: 62000000,
+      created_at: '2026-08-10T14:00:00Z',
+      items: [
+        { product_id: 'p5', product_sku: 'SRV-SYS-01', product_name: 'Máy Chủ Server Dell PowerEdge T150', unit: 'Cái', expected_qty: 2, received_qty: 2, cost_price: 31000000, subtotal: 62000000 }
+      ]
+    }
   ]
 };
+
+// Helper functions for UUID validation and Supabase payload sanitization
+function isValidUUID(str) {
+  if (typeof str !== 'string') return false;
+  return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(str);
+}
+
+function prepareSupabasePayload(dataObj) {
+  const payload = { ...dataObj };
+  if (payload.id && !isValidUUID(payload.id)) {
+    delete payload.id;
+  }
+  return payload;
+}
 
 class SupabaseProvider {
   constructor() {
@@ -121,24 +152,72 @@ class SupabaseProvider {
     customer.id = customer.id || 'c_' + Date.now();
     customer.code = customer.code || 'KH' + Math.floor(100 + Math.random() * 900);
     customer.current_debt = customer.current_debt || 0;
-    customer.created_at = new Date().toISOString();
+    customer.created_at = customer.created_at || new Date().toISOString();
 
+    let createdCust = { ...customer };
     if (this.isLiveMode) {
-      const { data, error } = await this.supabase.from('customers').insert([customer]).select();
-      if (!error && data) return data[0];
+      const payload = prepareSupabasePayload(customer);
+      const { data, error } = await this.supabase.from('customers').insert([payload]).select();
+      if (error) {
+        console.error('Supabase addCustomer initial payload error:', error);
+        if (error.code === 'PGRST204' || (error.message && (error.message.includes('column') || error.message.includes('email') || error.message.includes('route') || error.message.includes('sales_person') || error.message.includes('distance_km')))) {
+          // Automatic Fallback: Retry with safe payload for Supabase database table
+          const fallbackPayload = { ...payload };
+          delete fallbackPayload.email;
+          delete fallbackPayload.route;
+          delete fallbackPayload.sales_person;
+          delete fallbackPayload.distance_km;
+          const { data: fbData, error: fbErr } = await this.supabase.from('customers').insert([fallbackPayload]).select();
+          if (fbErr) {
+            console.error('Supabase addCustomer fallback error:', fbErr);
+            throw new Error(fbErr.message || 'Không thể thêm khách hàng vào Supabase');
+          }
+          if (fbData && fbData.length > 0) {
+            createdCust = { ...customer, id: fbData[0].id };
+          }
+          if (typeof showToast === 'function') {
+            showToast('Đã tạo khách hàng thành công!', 'success');
+          }
+        } else {
+          throw new Error(error.message || 'Không thể thêm khách hàng vào Supabase');
+        }
+      } else if (data && data.length > 0) {
+        createdCust = { ...customer, id: data[0].id };
+      }
     }
     
     const db = this.getLocalStorageDb();
-    db.customers.unshift(customer);
+    if (!db.customers) db.customers = [];
+    const existingIdx = db.customers.findIndex(c => c.id === createdCust.id);
+    if (existingIdx !== -1) {
+      db.customers[existingIdx] = createdCust;
+    } else {
+      db.customers.unshift(createdCust);
+    }
     this.saveLocalStorageDb(db);
-    return customer;
+    return createdCust;
   }
 
   async updateCustomer(id, updates) {
     if (this.isLiveMode) {
-      await this.supabase.from('customers').update(updates).eq('id', id);
+      const payload = prepareSupabasePayload(updates);
+      const { error } = await this.supabase.from('customers').update(payload).eq('id', id);
+      if (error) {
+        console.error('Supabase updateCustomer error:', error);
+        if (error.code === 'PGRST204' || (error.message && (error.message.includes('column') || error.message.includes('email') || error.message.includes('route') || error.message.includes('sales_person') || error.message.includes('distance_km')))) {
+          const fallbackPayload = { ...payload };
+          delete fallbackPayload.email;
+          delete fallbackPayload.route;
+          delete fallbackPayload.sales_person;
+          delete fallbackPayload.distance_km;
+          await this.supabase.from('customers').update(fallbackPayload).eq('id', id);
+        } else {
+          throw new Error(error.message || 'Không thể cập nhật thông tin khách hàng trên Supabase');
+        }
+      }
     }
     const db = this.getLocalStorageDb();
+    if (!db.customers) db.customers = [];
     const idx = db.customers.findIndex(c => c.id === id);
     if (idx !== -1) {
       db.customers[idx] = { ...db.customers[idx], ...updates };
@@ -158,16 +237,67 @@ class SupabaseProvider {
   async addProduct(product) {
     product.id = product.id || 'p_' + Date.now();
     product.sku = product.sku || 'SKU-' + Math.floor(1000 + Math.random() * 9000);
-    
-    if (this.isLiveMode) {
-      const { data, error } = await this.supabase.from('products').insert([product]).select();
-      if (!error && data) return data[0];
-    }
+    product.cost_price = Number(product.cost_price) || 0;
+    product.selling_price = Number(product.selling_price) || 0;
+    product.stock_quantity = Number(product.stock_quantity) || 0;
+    product.min_stock_alert = Number(product.min_stock_alert) || 5;
 
     const db = this.getLocalStorageDb();
-    db.products.unshift(product);
+
+    // Check duplicate SKU before adding
+    const duplicateBySku = db.products.find(p => p.id !== product.id && (p.sku || '').toLowerCase() === (product.sku || '').toLowerCase());
+    if (duplicateBySku) {
+      throw new Error(`Mã SKU "${product.sku}" đã tồn tại trong kho (Sản phẩm: ${duplicateBySku.name})`);
+    }
+
+    let createdProd = product;
+
+    if (this.isLiveMode) {
+      const payload = prepareSupabasePayload(product);
+      const { data, error } = await this.supabase.from('products').insert([payload]).select();
+      if (error) {
+        console.error('Supabase addProduct error:', error);
+        if (error.code === '23505' || (error.message && error.message.toLowerCase().includes('unique'))) {
+          throw new Error(`Mã SKU "${product.sku}" đã tồn tại trên cơ sở dữ liệu!`);
+        }
+        throw new Error(error.message || 'Không thể thêm sản phẩm vào Supabase');
+      }
+      if (data && data.length > 0) {
+        createdProd = data[0];
+      }
+    }
+
+    const existingIdx = db.products.findIndex(p => p.id === createdProd.id);
+    if (existingIdx !== -1) {
+      db.products[existingIdx] = createdProd;
+    } else {
+      db.products.unshift(createdProd);
+    }
+
+    // Auto-record initial stock movement in Stock Ledger (Thẻ Kho) if stock_quantity > 0
+    if (createdProd.stock_quantity > 0) {
+      const initTx = {
+        id: 'it_' + Date.now(),
+        code: 'NK-' + Math.floor(1000 + Math.random() * 9000),
+        type: 'StockIn',
+        product_name: createdProd.name,
+        quantity: createdProd.stock_quantity,
+        previous_stock: 0,
+        new_stock: createdProd.stock_quantity,
+        reason: 'Nhập số lượng tồn kho đầu kỳ khi khởi tạo sản phẩm',
+        created_at: new Date().toISOString()
+      };
+      if (!db.inventory_transactions) db.inventory_transactions = [];
+      db.inventory_transactions.unshift(initTx);
+
+      if (this.isLiveMode) {
+        const txPayload = prepareSupabasePayload({ ...initTx, product_id: createdProd.id });
+        await this.supabase.from('inventory_transactions').insert([txPayload]);
+      }
+    }
+
     this.saveLocalStorageDb(db);
-    return product;
+    return createdProd;
   }
 
   async updateProduct(id, updates) {
@@ -185,72 +315,247 @@ class SupabaseProvider {
   // ORDERS
   async getOrders() {
     if (this.isLiveMode) {
-      const { data, error } = await this.supabase.from('orders').select('*').order('created_at', { ascending: false });
-      if (!error && data) return data;
+      try {
+        const { data, error } = await this.supabase.from('orders').select('*, order_items(*)').order('created_at', { ascending: false });
+        if (!error && data) {
+          return data.map(o => ({
+            ...o,
+            items: o.items && o.items.length > 0 ? o.items : (o.order_items || [])
+          }));
+        }
+        const { data: ordersData } = await this.supabase.from('orders').select('*').order('created_at', { ascending: false });
+        const { data: itemsData } = await this.supabase.from('order_items').select('*');
+        if (ordersData) {
+          const itemsMap = new Map();
+          (itemsData || []).forEach(item => {
+            if (!itemsMap.has(item.order_id)) itemsMap.set(item.order_id, []);
+            itemsMap.get(item.order_id).push(item);
+          });
+          return ordersData.map(o => ({
+            ...o,
+            items: itemsMap.get(o.id) || o.items || []
+          }));
+        }
+      } catch (err) {
+        console.error('Error fetching orders from Supabase:', err);
+      }
     }
     return this.getLocalStorageDb().orders;
   }
 
   async createOrder(orderData, items) {
-    orderData.id = orderData.id || 'o_' + Date.now();
-    orderData.order_code = orderData.order_code || 'HD' + new Date().toISOString().slice(0,10).replace(/-/g,'') + Math.floor(10 + Math.random() * 90);
-    orderData.created_at = new Date().toISOString();
+    const isLive = this.isLiveMode;
+    const db = this.getLocalStorageDb();
 
-    if (this.isLiveMode) {
-      await this.supabase.from('orders').insert([orderData]);
+    orderData.id = orderData.id || (isLive ? undefined : 'o_' + Date.now());
+    orderData.order_code = orderData.order_code || 'HD' + new Date().toISOString().slice(0,10).replace(/-/g,'') + Math.floor(10 + Math.random() * 90);
+    orderData.created_at = orderData.created_at || new Date().toISOString();
+
+    let savedOrder = { ...orderData };
+
+    if (isLive) {
+      try {
+        const orderPayload = prepareSupabasePayload({
+          order_code: orderData.order_code,
+          customer_id: isValidUUID(orderData.customer_id) ? orderData.customer_id : null,
+          customer_name: orderData.customer_name,
+          total_amount: Number(orderData.total_amount) || 0,
+          discount: Number(orderData.discount) || 0,
+          tax: Number(orderData.tax) || 0,
+          final_amount: Number(orderData.final_amount) || 0,
+          paid_amount: Number(orderData.paid_amount) || 0,
+          debt_amount: Number(orderData.debt_amount) || 0,
+          status: orderData.status || 'Completed',
+          payment_method: orderData.payment_method || 'Cash',
+          notes: orderData.notes || '',
+          created_at: orderData.created_at
+        });
+
+        const { data, error } = await this.supabase.from('orders').insert([orderPayload]).select();
+        if (error) {
+          console.error('Supabase createOrder insert error:', error);
+        } else if (data && data.length > 0) {
+          savedOrder = { ...savedOrder, ...data[0] };
+        }
+      } catch (err) {
+        console.error('Error inserting order in Supabase:', err);
+      }
     }
 
-    orderData.items = items;
-    const db = this.getLocalStorageDb();
-    db.orders.unshift(orderData);
+    if (!savedOrder.id) {
+      savedOrder.id = 'o_' + Date.now();
+    }
 
-    // Stock deduction & Debt creation
-    items.forEach(item => {
-      const prod = db.products.find(p => p.id === item.product_id || p.name === item.product_name);
+    savedOrder.items = items;
+    if (!db.orders) db.orders = [];
+    db.orders.unshift(savedOrder);
+
+    // Stock deduction & Inventory log
+    for (const item of items) {
+      const prod = db.products.find(p => p.id === item.product_id || p.name === item.product_name || p.sku === item.product_sku);
       if (prod) {
-        const oldStock = prod.stock_quantity;
-        prod.stock_quantity = Math.max(0, prod.stock_quantity - item.quantity);
+        const oldStock = Number(prod.stock_quantity) || 0;
+        const newStock = Math.max(0, oldStock - item.quantity);
+        prod.stock_quantity = newStock;
         
-        // Log inventory transaction
-        db.inventory_transactions.unshift({
-          id: 'it_' + Date.now() + '_' + Math.random(),
+        const txObj = {
+          id: 'it_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
           code: 'XK-' + Math.floor(1000 + Math.random() * 9000),
           type: 'StockOut',
           product_name: prod.name,
           quantity: item.quantity,
           previous_stock: oldStock,
-          new_stock: prod.stock_quantity,
-          reason: 'Xuất bán đơn hàng ' + orderData.order_code,
+          new_stock: newStock,
+          reason: 'Xuất bán đơn hàng ' + savedOrder.order_code,
           created_at: new Date().toISOString()
-        });
-      }
-    });
+        };
 
-    if (orderData.debt_amount > 0) {
-      db.debts.unshift({
+        if (!db.inventory_transactions) db.inventory_transactions = [];
+        db.inventory_transactions.unshift(txObj);
+
+        if (isLive) {
+          try {
+            if (isValidUUID(prod.id)) {
+              await this.supabase.from('products').update({ stock_quantity: newStock }).eq('id', prod.id);
+            }
+            const txPayload = prepareSupabasePayload({
+              code: txObj.code,
+              type: txObj.type,
+              product_id: isValidUUID(prod.id) ? prod.id : null,
+              product_name: txObj.product_name,
+              quantity: txObj.quantity,
+              previous_stock: txObj.previous_stock,
+              new_stock: txObj.new_stock,
+              reason: txObj.reason,
+              created_at: txObj.created_at
+            });
+            await this.supabase.from('inventory_transactions').insert([txPayload]);
+          } catch (e) {
+            console.error('Supabase inventory log error:', e);
+          }
+        }
+      }
+
+      // Order items insertion into Supabase
+      if (isLive && isValidUUID(savedOrder.id)) {
+        try {
+          const itemPayload = prepareSupabasePayload({
+            order_id: savedOrder.id,
+            product_id: isValidUUID(item.product_id) ? item.product_id : null,
+            product_name: item.product_name,
+            unit_price: Number(item.unit_price) || 0,
+            quantity: Number(item.quantity) || 1,
+            subtotal: Number(item.subtotal) || 0
+          });
+          await this.supabase.from('order_items').insert([itemPayload]);
+        } catch (e) {
+          console.error('Supabase order_items insert error:', e);
+        }
+      }
+    }
+
+    // Debt creation if debt_amount > 0
+    if (savedOrder.debt_amount > 0) {
+      const debtObj = {
         id: 'd_' + Date.now(),
         code: 'CN-PT-' + Math.floor(100 + Math.random() * 900),
-        customer_name: orderData.customer_name,
-        order_id: orderData.id,
-        order_code: orderData.order_code,
+        customer_name: savedOrder.customer_name,
+        order_id: savedOrder.id,
+        order_code: savedOrder.order_code,
         items: items,
         type: 'Receivable',
-        total_amount: orderData.debt_amount,
-        remaining_amount: orderData.debt_amount,
+        total_amount: Number(savedOrder.debt_amount),
+        remaining_amount: Number(savedOrder.debt_amount),
         due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
         status: 'Unpaid',
-        notes: 'Ghi nhận công nợ đơn ' + orderData.order_code
-      });
+        notes: 'Ghi nhận công nợ đơn ' + savedOrder.order_code,
+        created_at: new Date().toISOString()
+      };
 
-      // Update customer balance
-      const cust = db.customers.find(c => c.name === orderData.customer_name);
+      if (!db.debts) db.debts = [];
+      db.debts.unshift(debtObj);
+
+      // Update customer balance in LocalStorage
+      const cust = db.customers.find(c => c.name === savedOrder.customer_name || (savedOrder.customer_id && c.id === savedOrder.customer_id));
       if (cust) {
-        cust.current_debt = (cust.current_debt || 0) + orderData.debt_amount;
+        cust.current_debt = (Number(cust.current_debt) || 0) + Number(savedOrder.debt_amount);
+      }
+
+      if (isLive) {
+        try {
+          const debtPayload = prepareSupabasePayload({
+            code: debtObj.code,
+            customer_id: (cust && isValidUUID(cust.id)) ? cust.id : (isValidUUID(savedOrder.customer_id) ? savedOrder.customer_id : null),
+            customer_name: savedOrder.customer_name,
+            order_id: isValidUUID(savedOrder.id) ? savedOrder.id : null,
+            type: debtObj.type,
+            total_amount: debtObj.total_amount,
+            remaining_amount: debtObj.remaining_amount,
+            due_date: debtObj.due_date,
+            status: debtObj.status,
+            notes: debtObj.notes,
+            created_at: debtObj.created_at
+          });
+
+          const { data: insertedDebt, error: debtErr } = await this.supabase.from('debts').insert([debtPayload]).select();
+          if (debtErr) {
+            console.error('Supabase debt insert error:', debtErr);
+          } else if (insertedDebt && insertedDebt.length > 0) {
+            debtObj.id = insertedDebt[0].id;
+          }
+
+          // Update customer debt balance in Supabase
+          if (cust && isValidUUID(cust.id)) {
+            await this.supabase.from('customers').update({ current_debt: cust.current_debt }).eq('id', cust.id);
+          } else {
+            const { data: custData } = await this.supabase.from('customers').select('*').eq('name', savedOrder.customer_name);
+            if (custData && custData.length > 0) {
+              const targetCust = custData[0];
+              const updatedDebt = (Number(targetCust.current_debt) || 0) + Number(savedOrder.debt_amount);
+              await this.supabase.from('customers').update({ current_debt: updatedDebt }).eq('id', targetCust.id);
+            }
+          }
+        } catch (e) {
+          console.error('Supabase debt creation error:', e);
+        }
+      }
+    }
+
+    // Log upfront payment (Cash/Bank) in debt_payments if paid_amount > 0
+    if (savedOrder.paid_amount > 0) {
+      const upfrontDpObj = {
+        id: 'dp_pos_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+        debt_id: savedOrder.debt_amount > 0 ? (debtObj ? debtObj.id : null) : null,
+        customer_name: savedOrder.customer_name,
+        payment_code: 'TT-POS-' + (savedOrder.order_code || Math.floor(100000 + Math.random() * 900000)),
+        amount: Number(savedOrder.paid_amount),
+        payment_method: savedOrder.payment_method === 'Debt' ? 'Bank' : (savedOrder.payment_method || 'Cash'),
+        note: `Thanh toán (${savedOrder.payment_method === 'Bank' ? 'Chuyển Khoản' : 'Tiền Mặt'}) khi mua đơn hàng ${savedOrder.order_code}`,
+        created_at: savedOrder.created_at || new Date().toISOString()
+      };
+
+      if (!db.debt_payments) db.debt_payments = [];
+      db.debt_payments.unshift(upfrontDpObj);
+
+      if (isLive) {
+        try {
+          const upfrontPayload = prepareSupabasePayload({
+            debt_id: (debtObj && isValidUUID(debtObj.id)) ? debtObj.id : null,
+            payment_code: upfrontDpObj.payment_code,
+            amount: upfrontDpObj.amount,
+            payment_method: upfrontDpObj.payment_method,
+            note: upfrontDpObj.note,
+            created_at: upfrontDpObj.created_at
+          });
+          await this.supabase.from('debt_payments').insert([upfrontPayload]);
+        } catch (e) {
+          console.error('Supabase upfront payment log error:', e);
+        }
       }
     }
 
     this.saveLocalStorageDb(db);
-    return orderData;
+    return savedOrder;
   }
 
   // DEBTS
@@ -273,12 +578,22 @@ class SupabaseProvider {
 
   async addDebtPayment(debtId, amount, paymentMethod, note, customerName = null) {
     const db = this.getLocalStorageDb();
+    const isLive = this.isLiveMode;
 
     // AUTO distribution across customer's open debt vouchers (FIFO)
     if ((debtId === 'AUTO' || debtId === 'ALL') && customerName) {
-      const openDebts = db.debts
-        .filter(d => d.customer_name === customerName && d.remaining_amount > 0)
-        .sort((a, b) => new Date(a.due_date || a.created_at || 0) - new Date(b.due_date || b.created_at || 0));
+      let openDebts = [];
+      if (isLive) {
+        const { data } = await this.supabase.from('debts').select('*').eq('customer_name', customerName).gt('remaining_amount', 0);
+        if (data && data.length > 0) {
+          openDebts = data;
+        } else {
+          openDebts = (db.debts || []).filter(d => d.customer_name === customerName && Number(d.remaining_amount) > 0);
+        }
+      } else {
+        openDebts = (db.debts || []).filter(d => d.customer_name === customerName && Number(d.remaining_amount) > 0);
+      }
+      openDebts.sort((a, b) => new Date(a.due_date || a.created_at || 0) - new Date(b.due_date || b.created_at || 0));
 
       let remainingPaymentToDistribute = amount;
       const paymentCode = 'TT-' + Math.floor(100000 + Math.random() * 900000);
@@ -286,18 +601,21 @@ class SupabaseProvider {
       for (const debt of openDebts) {
         if (remainingPaymentToDistribute <= 0) break;
 
-        const payForThisDebt = Math.min(debt.remaining_amount, remainingPaymentToDistribute);
-        debt.remaining_amount -= payForThisDebt;
+        const currentRem = Number(debt.remaining_amount) || 0;
+        const payForThisDebt = Math.min(currentRem, remainingPaymentToDistribute);
+        const newRemaining = Math.max(0, currentRem - payForThisDebt);
+        debt.remaining_amount = newRemaining;
         remainingPaymentToDistribute -= payForThisDebt;
 
-        if (debt.remaining_amount === 0) {
-          debt.status = 'Paid';
-        } else {
-          debt.status = 'Partial';
+        debt.status = newRemaining === 0 ? 'Paid' : 'Partial';
+
+        const localDebt = (db.debts || []).find(d => d.id === debt.id || d.code === debt.code);
+        if (localDebt) {
+          localDebt.remaining_amount = newRemaining;
+          localDebt.status = debt.status;
         }
 
-        if (!db.debt_payments) db.debt_payments = [];
-        db.debt_payments.unshift({
+        const dpObj = {
           id: 'dp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
           debt_id: debt.id,
           payment_code: paymentCode,
@@ -305,15 +623,40 @@ class SupabaseProvider {
           payment_method: paymentMethod || 'Bank',
           note: note || `Thanh toán công nợ (${debt.code})`,
           created_at: new Date().toISOString()
-        });
+        };
+
+        if (!db.debt_payments) db.debt_payments = [];
+        db.debt_payments.unshift(dpObj);
+
+        if (isLive) {
+          try {
+            if (isValidUUID(debt.id)) {
+              await this.supabase.from('debts').update({ remaining_amount: newRemaining, status: debt.status }).eq('id', debt.id);
+            }
+            const dpPayload = prepareSupabasePayload({
+              debt_id: isValidUUID(debt.id) ? debt.id : null,
+              payment_code: dpObj.payment_code,
+              amount: dpObj.amount,
+              payment_method: dpObj.payment_method,
+              note: dpObj.note,
+              created_at: dpObj.created_at
+            });
+            await this.supabase.from('debt_payments').insert([dpPayload]);
+          } catch (e) {
+            console.error('Supabase addDebtPayment item error:', e);
+          }
+        }
       }
 
       const cust = db.customers.find(c => c.name === customerName);
       if (cust) {
         if (cust.type === 'Supplier') {
-          cust.current_debt = (cust.current_debt || 0) + amount;
+          cust.current_debt = (Number(cust.current_debt) || 0) + amount;
         } else {
-          cust.current_debt = Math.max(0, (cust.current_debt || 0) - amount);
+          cust.current_debt = Math.max(0, (Number(cust.current_debt) || 0) - amount);
+        }
+        if (isLive && isValidUUID(cust.id)) {
+          await this.supabase.from('customers').update({ current_debt: cust.current_debt }).eq('id', cust.id);
         }
       }
 
@@ -322,36 +665,70 @@ class SupabaseProvider {
     }
 
     // Specific debt voucher payment (Full or Partial)
-    const debt = db.debts.find(d => d.id === debtId);
-    if (debt) {
-      debt.remaining_amount = Math.max(0, debt.remaining_amount - amount);
-      if (debt.remaining_amount === 0) {
-        debt.status = 'Paid';
-      } else {
-        debt.status = 'Partial';
-      }
+    let debt = (db.debts || []).find(d => d.id === debtId);
+    let supaDebt = null;
 
-      if (!db.debt_payments) db.debt_payments = [];
-      db.debt_payments.unshift({
-        id: 'dp_' + Date.now(),
-        debt_id: debtId,
-        payment_code: 'TT-' + Math.floor(100000 + Math.random() * 900000),
-        amount: amount,
-        payment_method: paymentMethod || 'Bank',
-        note: note || 'Thanh toán công nợ',
-        created_at: new Date().toISOString()
-      });
-
-      const cust = db.customers.find(c => c.name === debt.customer_name);
-      if (cust) {
-        if (debt.type === 'Receivable') {
-          cust.current_debt = Math.max(0, (cust.current_debt || 0) - amount);
-        } else {
-          cust.current_debt = (cust.current_debt || 0) + amount;
-        }
-      }
-      this.saveLocalStorageDb(db);
+    if (isLive) {
+      const { data } = await this.supabase.from('debts').select('*').eq('id', debtId).single();
+      if (data) supaDebt = data;
     }
+
+    const currentRemaining = supaDebt ? Number(supaDebt.remaining_amount) : (debt ? Number(debt.remaining_amount) : amount);
+    const newRemaining = Math.max(0, currentRemaining - amount);
+    const status = newRemaining === 0 ? 'Paid' : 'Partial';
+
+    if (debt) {
+      debt.remaining_amount = newRemaining;
+      debt.status = status;
+    }
+
+    const dpObj = {
+      id: 'dp_' + Date.now(),
+      debt_id: debtId,
+      payment_code: 'TT-' + Math.floor(100000 + Math.random() * 900000),
+      amount: amount,
+      payment_method: paymentMethod || 'Bank',
+      note: note || 'Thanh toán công nợ',
+      created_at: new Date().toISOString()
+    };
+
+    if (!db.debt_payments) db.debt_payments = [];
+    db.debt_payments.unshift(dpObj);
+
+    const targetCustomerName = debt ? debt.customer_name : customerName;
+    const cust = db.customers.find(c => c.name === targetCustomerName);
+    if (cust) {
+      const isReceivable = debt ? (debt.type === 'Receivable') : true;
+      if (isReceivable) {
+        cust.current_debt = Math.max(0, (Number(cust.current_debt) || 0) - amount);
+      } else {
+        cust.current_debt = (Number(cust.current_debt) || 0) + amount;
+      }
+      if (isLive && isValidUUID(cust.id)) {
+        await this.supabase.from('customers').update({ current_debt: cust.current_debt }).eq('id', cust.id);
+      }
+    }
+
+    if (isLive) {
+      try {
+        if (isValidUUID(debtId)) {
+          await this.supabase.from('debts').update({ remaining_amount: newRemaining, status: status }).eq('id', debtId);
+        }
+        const dpPayload = prepareSupabasePayload({
+          debt_id: isValidUUID(debtId) ? debtId : null,
+          payment_code: dpObj.payment_code,
+          amount: dpObj.amount,
+          payment_method: dpObj.payment_method,
+          note: dpObj.note,
+          created_at: dpObj.created_at
+        });
+        await this.supabase.from('debt_payments').insert([dpPayload]);
+      } catch (e) {
+        console.error('Supabase addDebtPayment error:', e);
+      }
+    }
+
+    this.saveLocalStorageDb(db);
   }
 
   // RETURNS / TRẢ HÀNG
@@ -369,22 +746,39 @@ class SupabaseProvider {
     const returns = (await this.getReturns()).filter(r => r.customer_name === customerName);
     const debts = (await this.getDebts()).filter(d => d.customer_name === customerName);
     
-    // Aggregate payments for this customer's debts
+    let payments = [];
+    if (this.isLiveMode) {
+      const debtIds = debts.map(d => d.id).filter(id => isValidUUID(id));
+      if (debtIds.length > 0) {
+        const { data } = await this.supabase.from('debt_payments').select('*').in('debt_id', debtIds);
+        if (data) payments = data;
+      }
+    }
+    
     const db = this.getLocalStorageDb();
     const customerDebtIds = debts.map(d => d.id);
-    const payments = (db.debt_payments || []).filter(p => customerDebtIds.includes(p.debt_id) || p.customer_name === customerName);
+    const localPayments = (db.debt_payments || []).filter(p => customerDebtIds.includes(p.debt_id) || p.customer_name === customerName);
+    
+    // Combine and remove duplicates by payment_code or id
+    const paymentMap = new Map();
+    [...payments, ...localPayments].forEach(p => {
+      const key = (p.payment_code && p.payment_code.trim()) ? p.payment_code.trim() : p.id;
+      if (key && !paymentMap.has(key)) {
+        paymentMap.set(key, p);
+      }
+    });
 
     return {
       orders,
       returns,
       debts,
-      payments
+      payments: Array.from(paymentMap.values())
     };
   }
 
   async createSalesReturn(returnData, itemsToReturn) {
     returnData.id = returnData.id || 'ret_' + Date.now();
-    returnData.return_code = returnData.return_code || 'TH' + new Date().toISOString().slice(0,10).replace(/-/g,'') + Math.floor(10 + Math.random() * 90);
+    returnData.return_code = returnData.return_code || ('TH' + new Date().toISOString().slice(0,10).replace(/-/g,'') + Math.floor(10 + Math.random() * 90));
     returnData.created_at = new Date().toISOString();
 
     const db = this.getLocalStorageDb();
@@ -416,44 +810,99 @@ class SupabaseProvider {
     // 2. Adjust Debt / Customer balance & record in Debt Payment History
     if (returnData.total_refund > 0) {
       const cust = db.customers.find(c => c.name === returnData.customer_name);
-      if (cust && returnData.refund_method === 'DebtDeduction') {
-        cust.current_debt = Math.max(0, (cust.current_debt || 0) - returnData.total_refund);
-      }
-
-      // Find open receivable debt for this customer
+      
+      // Find open receivable debts for this customer
       const customerDebts = (db.debts || []).filter(d => d.customer_name === returnData.customer_name && d.type === 'Receivable');
       let targetDebt = customerDebts.find(d => d.remaining_amount > 0);
 
-      if (returnData.refund_method === 'DebtDeduction') {
-        let remainingRefundToDistribute = returnData.total_refund;
-        const openDebts = customerDebts
-          .filter(d => d.remaining_amount > 0)
-          .sort((a, b) => new Date(a.due_date || a.created_at || 0) - new Date(b.due_date || b.created_at || 0));
+      const openDebts = customerDebts
+        .filter(d => d.remaining_amount > 0)
+        .sort((a, b) => new Date(a.due_date || a.created_at || 0) - new Date(b.due_date || b.created_at || 0));
 
+      if (returnData.refund_method === 'DebtDeduction' || openDebts.length > 0) {
+        let remainingRefundToDistribute = returnData.total_refund;
         for (const debt of openDebts) {
           if (remainingRefundToDistribute <= 0) break;
           const deductAmount = Math.min(debt.remaining_amount, remainingRefundToDistribute);
           debt.remaining_amount -= deductAmount;
           remainingRefundToDistribute -= deductAmount;
           debt.status = debt.remaining_amount === 0 ? 'Paid' : 'Partial';
+
+          if (this.isLiveMode && isValidUUID(debt.id)) {
+            await this.supabase.from('debts').update({ remaining_amount: debt.remaining_amount, status: debt.status }).eq('id', debt.id);
+          }
+        }
+
+        if (cust) {
+          cust.current_debt = Math.max(0, (cust.current_debt || 0) - returnData.total_refund);
+          if (this.isLiveMode && isValidUUID(cust.id)) {
+            await this.supabase.from('customers').update({ current_debt: cust.current_debt }).eq('id', cust.id);
+          }
         }
       }
 
-      // Record in debt_payments history
-      if (!db.debt_payments) db.debt_payments = [];
-      db.debt_payments.unshift({
+      const formattedReturnCode = (returnData.return_code && returnData.return_code.startsWith('TH')) 
+        ? returnData.return_code 
+        : ('TH-' + (returnData.return_code || Math.floor(100000 + Math.random() * 900000)));
+
+      // Record in debt_payments history for debt detail ledger
+      const dpRetObj = {
         id: 'dp_ret_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
         debt_id: targetDebt ? targetDebt.id : (customerDebts[0] ? customerDebts[0].id : 'd_ret_' + Date.now()),
         customer_name: returnData.customer_name,
-        payment_code: 'TH-' + (returnData.return_code || Math.floor(100000 + Math.random() * 900000)),
+        payment_code: formattedReturnCode,
         amount: returnData.total_refund,
-        payment_method: returnData.refund_method || 'DebtDeduction',
-        note: `Trừ công nợ phiếu trả hàng (${returnData.return_code || 'Trả hàng'}): ${returnData.reason || 'Khách đổi trả hàng'}`,
+        payment_method: 'DebtDeduction',
+        note: `Giảm trừ công nợ phiếu trả hàng (${formattedReturnCode}): ${returnData.reason || 'Khách đổi trả hàng'}`,
         created_at: returnData.created_at || new Date().toISOString()
-      });
+      };
+
+      if (!db.debt_payments) db.debt_payments = [];
+      db.debt_payments.unshift(dpRetObj);
+
+      if (this.isLiveMode) {
+        try {
+          const dpPayload = prepareSupabasePayload({
+            debt_id: isValidUUID(dpRetObj.debt_id) ? dpRetObj.debt_id : null,
+            payment_code: dpRetObj.payment_code,
+            amount: dpRetObj.amount,
+            payment_method: dpRetObj.payment_method,
+            note: dpRetObj.note,
+            created_at: dpRetObj.created_at
+          });
+          await this.supabase.from('debt_payments').insert([dpPayload]);
+
+          const retPayload = prepareSupabasePayload({
+            return_code: returnData.return_code,
+            order_code: returnData.order_code,
+            customer_name: returnData.customer_name,
+            total_refund: returnData.total_refund,
+            refund_method: returnData.refund_method,
+            reason: returnData.reason,
+            created_at: returnData.created_at
+          });
+          await this.supabase.from('returns').insert([retPayload]);
+        } catch (e) {
+          console.error('Supabase return & debt deduction insert error:', e);
+        }
+      }
     }
 
     this.saveLocalStorageDb(db);
+
+    if (this.isLiveMode) {
+      try {
+        for (const item of itemsToReturn) {
+          const prod = db.products.find(p => p.id === item.product_id || p.name === item.product_name);
+          if (prod && isValidUUID(prod.id)) {
+            await this.supabase.from('products').update({ stock_quantity: prod.stock_quantity }).eq('id', prod.id);
+          }
+        }
+      } catch (e) {
+        console.error('Supabase update stock error on return:', e);
+      }
+    }
+
     return returnData;
   }
 
@@ -467,18 +916,55 @@ class SupabaseProvider {
   }
 
   async recordStockTransaction(productId, type, qty, reason) {
-    const db = this.getLocalStorageDb();
-    const prod = db.products.find(p => p.id === productId);
-    if (prod) {
-      const prev = prod.stock_quantity;
-      const next = type === 'StockIn' ? prev + qty : Math.max(0, prev - qty);
-      prod.stock_quantity = next;
+    let prev = 0;
+    let next = 0;
+    let prodName = '';
 
+    const db = this.getLocalStorageDb();
+    let prod = db.products.find(p => p.id === productId);
+
+    if (this.isLiveMode) {
+      try {
+        const { data: supaProd } = await this.supabase.from('products').select('*').eq('id', productId).single();
+        if (supaProd) {
+          prev = supaProd.stock_quantity || 0;
+          next = type === 'StockIn' ? prev + qty : Math.max(0, prev - qty);
+          prodName = supaProd.name;
+
+          await this.supabase.from('products').update({ stock_quantity: next }).eq('id', productId);
+
+          const txPayload = prepareSupabasePayload({
+            code: (type === 'StockIn' ? 'NK-' : 'XK-') + Math.floor(1000 + Math.random() * 9000),
+            type: type,
+            product_id: productId,
+            product_name: prodName,
+            quantity: qty,
+            previous_stock: prev,
+            new_stock: next,
+            reason: reason || (type === 'StockIn' ? 'Nhập bổ sung kho' : 'Xuất hủy / Chuyển kho'),
+            created_at: new Date().toISOString()
+          });
+          await this.supabase.from('inventory_transactions').insert([txPayload]);
+        }
+      } catch (err) {
+        console.error('Error recording stock transaction in Supabase:', err);
+      }
+    }
+
+    if (prod) {
+      prev = prod.stock_quantity;
+      next = type === 'StockIn' ? prev + qty : Math.max(0, prev - qty);
+      prod.stock_quantity = next;
+      prodName = prodName || prod.name;
+    }
+
+    if (prodName) {
+      if (!db.inventory_transactions) db.inventory_transactions = [];
       db.inventory_transactions.unshift({
         id: 'it_' + Date.now(),
         code: (type === 'StockIn' ? 'NK-' : 'XK-') + Math.floor(1000 + Math.random() * 9000),
         type: type,
-        product_name: prod.name,
+        product_name: prodName,
         quantity: qty,
         previous_stock: prev,
         new_stock: next,
@@ -486,6 +972,195 @@ class SupabaseProvider {
         created_at: new Date().toISOString()
       });
 
+      this.saveLocalStorageDb(db);
+    }
+  }
+
+  // INBOUND ORDERS / PR MUA HÀNG
+  async getInboundOrders() {
+    if (this.isLiveMode) {
+      try {
+        const { data, error } = await this.supabase.from('inbound_orders').select('*').order('created_at', { ascending: false });
+        if (!error && data) return data;
+      } catch (err) {
+        console.error('Error fetching inbound_orders from Supabase:', err);
+      }
+    }
+    return this.getLocalStorageDb().inbound_orders || [];
+  }
+
+  async createInboundOrder(orderData, items) {
+    const isLive = this.isLiveMode;
+    const db = this.getLocalStorageDb();
+
+    orderData.id = orderData.id || 'inb_' + Date.now();
+    orderData.code = orderData.code || ('PR' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + Math.floor(10 + Math.random() * 90));
+    orderData.created_at = orderData.created_at || new Date().toISOString();
+    orderData.status = orderData.status || 'Pending';
+    orderData.created_by = orderData.created_by || 'Kỹ thuật';
+    orderData.items = items || [];
+    orderData.total_amount = items.reduce((sum, it) => sum + (Number(it.subtotal) || (Number(it.expected_qty || 0) * Number(it.cost_price || 0))), 0);
+
+    if (!db.inbound_orders) db.inbound_orders = [];
+    db.inbound_orders.unshift(orderData);
+
+    if (isLive) {
+      try {
+        const payload = prepareSupabasePayload({
+          code: orderData.code,
+          supplier_id: isValidUUID(orderData.supplier_id) ? orderData.supplier_id : null,
+          supplier_name: orderData.supplier_name,
+          created_by: orderData.created_by,
+          expected_date: orderData.expected_date,
+          status: orderData.status,
+          total_amount: orderData.total_amount,
+          notes: orderData.notes || '',
+          items: orderData.items,
+          created_at: orderData.created_at
+        });
+        const { data } = await this.supabase.from('inbound_orders').insert([payload]).select();
+        if (data && data.length > 0) {
+          orderData.id = data[0].id;
+        }
+      } catch (e) {
+        console.error('Supabase createInboundOrder error:', e);
+      }
+    }
+
+    this.saveLocalStorageDb(db);
+    return orderData;
+  }
+
+  async fulfillInboundOrder(inboundId, itemsWithReceivedQty, receivedBy, notes) {
+    const isLive = this.isLiveMode;
+    const db = this.getLocalStorageDb();
+
+    const inbound = (db.inbound_orders || []).find(o => o.id === inboundId);
+    if (!inbound) throw new Error('Không tìm thấy phiếu Inbound!');
+
+    inbound.status = 'Received';
+    inbound.received_by = receivedBy || 'Kho';
+    inbound.received_at = new Date().toISOString();
+    if (notes) inbound.notes = (inbound.notes ? inbound.notes + ' | ' : '') + notes;
+
+    let grandTotal = 0;
+
+    // Update items with actual received quantities
+    inbound.items = (itemsWithReceivedQty || inbound.items).map(item => {
+      const recQty = Number(item.received_qty) >= 0 ? Number(item.received_qty) : Number(item.expected_qty || 0);
+      const cost = Number(item.cost_price) || 0;
+      const subtotal = recQty * cost;
+      grandTotal += subtotal;
+
+      // Update product stock in db.products
+      const prod = db.products.find(p => p.id === item.product_id || p.sku === item.product_sku || p.name === item.product_name);
+      if (prod) {
+        const prevStock = Number(prod.stock_quantity) || 0;
+        const newStock = prevStock + recQty;
+        prod.stock_quantity = newStock;
+
+        // Record stock transaction in Thẻ Kho
+        if (!db.inventory_transactions) db.inventory_transactions = [];
+        db.inventory_transactions.unshift({
+          id: 'it_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+          code: 'NK-' + inbound.code,
+          type: 'StockIn',
+          product_name: prod.name,
+          quantity: recQty,
+          previous_stock: prevStock,
+          new_stock: newStock,
+          reason: `Kế thừa nhập kho từ đơn Inbound ${inbound.code} (NCC: ${inbound.supplier_name})`,
+          created_at: new Date().toISOString()
+        });
+
+        if (isLive && isValidUUID(prod.id)) {
+          this.supabase.from('products').update({ stock_quantity: newStock }).eq('id', prod.id).then();
+        }
+      }
+
+      return {
+        ...item,
+        received_qty: recQty,
+        subtotal: subtotal
+      };
+    });
+
+    inbound.total_amount = grandTotal;
+
+    // Create Payable Debt for Supplier if total > 0
+    if (grandTotal > 0) {
+      const debtObj = {
+        id: 'd_' + Date.now(),
+        code: 'CN-TRA-' + Math.floor(100 + Math.random() * 900),
+        customer_name: inbound.supplier_name,
+        order_code: inbound.code,
+        items: inbound.items,
+        type: 'Payable',
+        total_amount: grandTotal,
+        remaining_amount: grandTotal,
+        due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+        status: 'Unpaid',
+        notes: `Nợ tiền hàng nhập từ đơn Inbound ${inbound.code}`,
+        created_at: new Date().toISOString()
+      };
+
+      if (!db.debts) db.debts = [];
+      db.debts.unshift(debtObj);
+
+      const supplier = db.customers.find(c => c.name === inbound.supplier_name);
+      if (supplier) {
+        supplier.current_debt = (Number(supplier.current_debt) || 0) - grandTotal;
+      }
+
+      if (isLive) {
+        try {
+          const debtPayload = prepareSupabasePayload({
+            code: debtObj.code,
+            customer_name: debtObj.customer_name,
+            order_code: debtObj.order_code,
+            type: debtObj.type,
+            total_amount: debtObj.total_amount,
+            remaining_amount: debtObj.remaining_amount,
+            due_date: debtObj.due_date,
+            status: debtObj.status,
+            notes: debtObj.notes,
+            created_at: debtObj.created_at
+          });
+          this.supabase.from('debts').insert([debtPayload]).then();
+        } catch (e) {
+          console.error('Supabase inbound debt error:', e);
+        }
+      }
+    }
+
+    if (isLive) {
+      try {
+        this.supabase.from('inbound_orders').update({
+          status: 'Received',
+          received_by: inbound.received_by,
+          received_at: inbound.received_at,
+          total_amount: inbound.total_amount,
+          items: inbound.items
+        }).eq('id', inbound.id).then();
+      } catch (e) {
+        console.error('Supabase fulfillInboundOrder error:', e);
+      }
+    }
+
+    this.saveLocalStorageDb(db);
+    return inbound;
+  }
+
+  async cancelInboundOrder(inboundId) {
+    const isLive = this.isLiveMode;
+    const db = this.getLocalStorageDb();
+
+    const inbound = (db.inbound_orders || []).find(o => o.id === inboundId);
+    if (inbound) {
+      inbound.status = 'Cancelled';
+      if (isLive) {
+        this.supabase.from('inbound_orders').update({ status: 'Cancelled' }).eq('id', inboundId).then();
+      }
       this.saveLocalStorageDb(db);
     }
   }
@@ -503,15 +1178,21 @@ class SupabaseProvider {
     lead.id = lead.id || 'l_' + Date.now();
     lead.stage = lead.stage || 'Lead';
     
+    let createdLead = lead;
     if (this.isLiveMode) {
-      const { data, error } = await this.supabase.from('leads').insert([lead]).select();
-      if (!error && data) return data[0];
+      const payload = prepareSupabasePayload(lead);
+      const { data, error } = await this.supabase.from('leads').insert([payload]).select();
+      if (error) {
+        console.error('Supabase addLead error:', error);
+        throw new Error(error.message || 'Không thể thêm Lead vào Supabase');
+      }
+      if (data && data.length > 0) createdLead = data[0];
     }
 
     const db = this.getLocalStorageDb();
-    db.leads.unshift(lead);
+    db.leads.unshift(createdLead);
     this.saveLocalStorageDb(db);
-    return lead;
+    return createdLead;
   }
 
   async updateLeadStage(id, stage) {

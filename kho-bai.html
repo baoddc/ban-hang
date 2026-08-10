@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,11 +9,12 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <!-- Supabase JS Client CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
+
   <!-- Styles -->
   <link rel="stylesheet" href="css/common.css">
   <link rel="stylesheet" href="inventory.css">
 </head>
+
 <body>
 
   <div class="app-container">
@@ -80,6 +82,9 @@
         </div>
 
         <div class="header-actions">
+          <button class="btn btn-secondary" onclick="openCreateInboundModal()">
+            <i class="bi bi-file-earmark-plus-fill text-primary"></i> + Tạo PR / Inbound (Kỹ Thuật)
+          </button>
           <button class="btn btn-secondary" onclick="openStockTxModal()">
             <i class="bi bi-arrow-down-up"></i> Nhập / Xuất Kho
           </button>
@@ -123,9 +128,13 @@
         </div>
 
         <!-- View Tabs -->
-        <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+        <div class="tab-navigation-bar">
           <button id="btn-tab-products" class="pill active" onclick="switchInventoryTab('products')">
             <i class="bi bi-box-seam"></i> Danh Mục Tồn Kho & Giá
+          </button>
+          <button id="btn-tab-inbound" class="pill" onclick="switchInventoryTab('inbound')">
+            <i class="bi bi-truck-flatbed"></i> Phiếu Inbound & PR Mua Hàng 
+            <span class="badge badge-warning" id="pending-inbound-count" style="margin-left:6px;">0</span>
           </button>
           <button id="btn-tab-ledger" class="pill" onclick="switchInventoryTab('ledger')">
             <i class="bi bi-journal-text"></i> Thẻ Kho (Nhật Ký Biến Động)
@@ -139,7 +148,8 @@
               <div class="card-title"><i class="bi bi-boxes text-primary"></i> Bảng Chi Tiết Hàng Hóa Tồn Kho</div>
               <div class="search-box" style="width:260px;">
                 <i class="bi bi-search"></i>
-                <input type="text" id="inv-search-input" placeholder="Tìm theo tên, SKU, vị trí..." oninput="filterInventoryTable()" />
+                <input type="text" id="inv-search-input" placeholder="Tìm theo tên, SKU, vị trí..."
+                  oninput="filterInventoryTable()" />
               </div>
             </div>
             <div class="table-container">
@@ -165,11 +175,52 @@
           </div>
         </div>
 
+        <!-- INBOUND ORDERS VIEW -->
+        <div id="inv-inbound-view" style="display: none;">
+          <div class="card">
+            <div class="card-header" style="flex-wrap:wrap; gap:12px;">
+              <div class="card-title"><i class="bi bi-truck-flatbed text-primary"></i> Quản Lý Đơn PR & Phiếu Nhập Hàng Inbound từ NCC</div>
+              <div style="display:flex; gap:10px; align-items:center;">
+                <select id="inbound-status-filter" class="form-control" style="width:170px;" onchange="filterInboundTable()">
+                  <option value="ALL">-- Tất cả trạng thái --</option>
+                  <option value="Pending" selected>Chờ nhập kho</option>
+                  <option value="Received">Đã nhập kho</option>
+                  <option value="Cancelled">Đã hủy</option>
+                </select>
+                <div class="search-box" style="width:240px;">
+                  <i class="bi bi-search"></i>
+                  <input type="text" id="inbound-search-input" placeholder="Tìm mã PR, NCC, người lập..." oninput="filterInboundTable()" />
+                </div>
+              </div>
+            </div>
+            <div class="table-container">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>Mã Phiếu</th>
+                    <th>Nhà Cung Cấp</th>
+                    <th>Người Lập (Kỹ Thuật)</th>
+                    <th>Ngày Tạo / Dự Kiến</th>
+                    <th>Số Mặt Hàng</th>
+                    <th>Tổng Giá Trị</th>
+                    <th>Trạng Thái</th>
+                    <th>Thao Tác</th>
+                  </tr>
+                </thead>
+                <tbody id="inbound-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
         <!-- STOCK LEDGER VIEW -->
         <div id="inv-ledger-view" style="display: none;">
           <div class="card">
             <div class="card-header">
-              <div class="card-title"><i class="bi bi-journal-arrow-down text-accent"></i> Nhật Ký Biến Động Nhập / Xuất Kho (Thẻ Kho)</div>
+              <div class="card-title"><i class="bi bi-journal-arrow-down text-accent"></i> Nhật Ký Biến Động Nhập / Xuất
+                Kho (Thẻ Kho)</div>
             </div>
             <div class="table-container">
               <table class="custom-table">
@@ -207,40 +258,45 @@
       <div class="modal-body">
         <div class="form-group">
           <label class="form-label">Mã SKU Sản Phẩm</label>
-          <input type="text" id="prod-sku" class="form-control" placeholder="LAP-DEL-02" />
+          <input type="text" id="prod-sku" class="form-control" placeholder="G60601" oninput="checkProductSkuAvailability()" />
+          <small id="prod-sku-feedback" class="form-text" style="display:none; margin-top:4px; font-weight:600;"></small>
         </div>
         <div class="form-group">
           <label class="form-label">Tên Sản Phẩm</label>
-          <input type="text" id="prod-name" class="form-control" placeholder="Tên thiết bị..." />
+          <input type="text" id="prod-name" class="form-control" placeholder="Tên sản phẩm" />
         </div>
         <div class="form-group">
           <label class="form-label">Danh Mục</label>
-          <input type="text" id="prod-category" class="form-control" placeholder="Máy tính, Phụ kiện..." />
+          <input type="text" id="prod-category" class="form-control" placeholder="Nhóm sản phẩm" />
         </div>
         <div class="form-group">
           <label class="form-label">Đơn Vị Tính</label>
-          <input type="text" id="prod-unit" class="form-control" value="Cái" />
+          <input type="text" id="prod-unit" class="form-control" value="Thùng" />
         </div>
         <div class="form-group">
           <label class="form-label">Giá Nhập Kho (VNĐ)</label>
-          <input type="text" inputmode="numeric" id="prod-cost" class="form-control format-number" placeholder="10.000.000" />
+          <input type="text" inputmode="numeric" id="prod-cost" class="form-control format-number"
+            placeholder="10.000.000" onfocus="this.select()" />
         </div>
         <div class="form-group">
           <label class="form-label">Giá Bán Niêm Yết (VNĐ)</label>
-          <input type="text" inputmode="numeric" id="prod-price" class="form-control format-number" placeholder="12.500.000" />
+          <input type="text" inputmode="numeric" id="prod-price" class="form-control format-number"
+            placeholder="12.500.000" onfocus="this.select()" />
         </div>
         <div class="form-group">
           <label class="form-label">Số Lượng Nhập Đầu Kỳ</label>
-          <input type="text" inputmode="numeric" id="prod-stock" class="form-control format-number" value="10" />
+          <input type="text" inputmode="numeric" id="prod-stock" class="form-control format-number" value="10"
+            onfocus="this.select()" />
         </div>
         <div class="form-group">
           <label class="form-label">Vị Trí Lưu Kho</label>
-          <input type="text" id="prod-location" class="form-control" value="Khu A - Kệ 01" />
+          <input type="text" id="prod-location" class="form-control" value="" />
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal('product-modal')">Hủy</button>
-        <button class="btn btn-primary" onclick="submitCreateProduct()"><i class="bi bi-check-circle"></i> Tạo Sản Phẩm</button>
+        <button class="btn btn-primary" onclick="submitCreateProduct()"><i class="bi bi-check-circle"></i> Tạo Sản
+          Phẩm</button>
       </div>
     </div>
   </div>
@@ -268,16 +324,135 @@
         </div>
         <div class="form-group">
           <label class="form-label">Số Lượng Giao Dịch</label>
-          <input type="text" inputmode="numeric" id="tx-qty-input" class="form-control format-number" value="1" />
+          <input type="text" inputmode="numeric" id="tx-qty-input" class="form-control format-number" value="1"
+            onfocus="this.select()" />
         </div>
         <div class="form-group">
           <label class="form-label">Lý Do / Ghi Chú Chứng Từ</label>
-          <textarea id="tx-reason-input" class="form-control" rows="2" placeholder="Nhập từ nhà cung cấp / Xuất kiểm kê..."></textarea>
+          <textarea id="tx-reason-input" class="form-control" rows="2"
+            placeholder="Nhập từ nhà cung cấp / Xuất kiểm kê..."></textarea>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal('stock-tx-modal')">Hủy</button>
-        <button class="btn btn-primary" onclick="submitStockTransaction()"><i class="bi bi-check-circle"></i> Ghi Nhận Kho</button>
+        <button class="btn btn-primary" onclick="submitStockTransaction()"><i class="bi bi-check-circle"></i> Ghi Nhận
+          Kho</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 1: Create PR / Inbound Order (Technical Dept) -->
+  <div class="modal-overlay" id="create-inbound-modal">
+    <div class="modal-box" style="max-width: 780px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="bi bi-file-earmark-plus-fill text-primary"></i> Lập Phiếu PR & Kế Hoạch Inbound (Bộ Phận Kỹ Thuật)</h3>
+        <button class="btn btn-icon" onclick="closeModal('create-inbound-modal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Chọn Nhà Cung Cấp (Supplier)</label>
+            <select id="inb-supplier-select" class="form-control">
+              <!-- Loaded dynamically -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ngày Dự Kiến Hàng Về</label>
+            <input type="date" id="inb-expected-date" class="form-control" />
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Người Lập Phiếu (Bộ Phận)</label>
+            <input type="text" id="inb-creator-name" class="form-control" value="Kỹ thuật - Nguyễn Văn Kỷ" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ghi Chú Đơn Mua Hàng</label>
+            <input type="text" id="inb-notes" class="form-control" placeholder="Lý do mua / số hợp đồng..." />
+          </div>
+        </div>
+
+        <hr style="margin:16px 0; border:0; border-top:1px solid var(--border);" />
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <h4 style="margin:0; font-size:0.95rem; font-weight:700;"><i class="bi bi-list-task text-accent"></i> Danh Sách Sản Phẩm Cần Mua</h4>
+          <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.8rem;" onclick="addInboundItemRow()">
+            <i class="bi bi-plus-lg"></i> Thêm Hàng Hóa
+          </button>
+        </div>
+
+        <div id="inbound-items-form-list" style="display:flex; flex-direction:column; gap:8px;">
+          <!-- Dynamic product rows -->
+        </div>
+
+        <div style="margin-top:16px; padding:12px; background:var(--bg-secondary); border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-weight:600;">Tổng Giá Trị Đơn Nhập Dự Kiến:</span>
+          <span id="inb-form-grand-total" style="font-size:1.2rem; font-weight:800; color:var(--primary);">0 ₫</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('create-inbound-modal')">Hủy Bỏ</button>
+        <button class="btn btn-primary" onclick="submitCreateInbound()"><i class="bi bi-check-circle-fill"></i> Tạo Phiếu PR / Inbound</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Inherit & Fulfill Inbound Order (Warehouse Dept) -->
+  <div class="modal-overlay" id="fulfill-inbound-modal">
+    <div class="modal-box" style="max-width: 820px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="bi bi-box-arrow-in-down text-success"></i> Kế Thừa & Thực Hiện Nhập Kho (Thủ Kho)</h3>
+        <button class="btn btn-icon" onclick="closeModal('fulfill-inbound-modal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="fulfill-inbound-id" />
+        
+        <div style="background:var(--bg-secondary); padding:12px; border-radius:8px; margin-bottom:16px; display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; font-size:0.88rem;">
+          <div><strong>Mã Đơn Inbound:</strong> <span id="ful-code" style="color:var(--primary); font-weight:700;"></span></div>
+          <div><strong>Nhà Cung Cấp:</strong> <span id="ful-supplier" style="font-weight:600;"></span></div>
+          <div><strong>Kỹ Thuật Lập:</strong> <span id="ful-creator"></span></div>
+        </div>
+
+        <h4 style="margin:0 0 10px 0; font-size:0.9rem; font-weight:700;"><i class="bi bi-check2-square text-accent"></i> Đổi / Xác Nhận Số Lượng Thực Nhận Tại Kho</h4>
+        
+        <div class="table-container" style="max-height:260px; overflow-y:auto;">
+          <table class="custom-table" style="font-size:0.85rem;">
+            <thead>
+              <tr>
+                <th>Mã SKU</th>
+                <th>Sản Phẩm</th>
+                <th>SL Dự Kiến (PR)</th>
+                <th style="width:140px; text-align:center;">SL Thực Nhận</th>
+                <th>Đơn Giá Nhập</th>
+                <th>Thành Tiền</th>
+              </tr>
+            </thead>
+            <tbody id="fulfill-items-tbody">
+              <!-- Loaded dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="form-group" style="margin-top:14px;">
+          <label class="form-label">Ghi Chú Nhập Kho (Thủ kho)</label>
+          <input type="text" id="ful-receiver-notes" class="form-control" placeholder="Ví dụ: Đã kiểm đếm đầy đủ tem niêm phong..." />
+        </div>
+
+        <div style="margin-top:12px; padding:12px; background:var(--bg-secondary); border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:0.8rem; color:var(--text-muted);">Tự động cập nhật Tồn kho, Thẻ kho & Công nợ Nhà cung cấp</div>
+          </div>
+          <div>
+            <span style="font-weight:600;">Tổng Giá Trị Nhập Kho: </span>
+            <span id="ful-grand-total" style="font-size:1.25rem; font-weight:800; color:var(--success);">0 ₫</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('fulfill-inbound-modal')">Hủy Bỏ</button>
+        <button class="btn btn-primary" style="background:var(--success); border-color:var(--success);" onclick="submitFulfillInbound()">
+          <i class="bi bi-check-all"></i> Xác Nhận Nhập Kho & Ghi Tồn
+        </button>
       </div>
     </div>
   </div>
@@ -287,4 +462,5 @@
   <script src="js/common.js"></script>
   <script src="inventory.js"></script>
 </body>
+
 </html>
