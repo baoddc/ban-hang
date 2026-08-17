@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,22 +11,28 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Supabase JS Client CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
+
   <!-- Common Styles & ERP Custom Styles -->
   <link rel="stylesheet" href="css/common.css">
   <link rel="stylesheet" href="erp.css">
 </head>
+
 <body>
 
   <div class="app-container">
     <!-- Sidebar Navigation -->
     <aside class="app-sidebar">
       <div class="sidebar-header">
-        <div class="brand-icon"><i class="bi bi-box-seam-fill"></i></div>
-        <div>
-          <div class="brand-title">APEX ERP</div>
-          <div class="brand-subtitle">Enterprise Suite</div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div class="brand-icon"><i class="bi bi-box-seam-fill"></i></div>
+          <div>
+            <div class="brand-title">BAO ERP</div>
+            <div class="brand-subtitle">Enterprise Suite</div>
+          </div>
         </div>
+        <button class="sidebar-close-btn" onclick="closeSidebar()" title="Đóng menu">
+          <i class="bi bi-x-lg"></i>
+        </button>
       </div>
 
       <ul class="sidebar-menu">
@@ -60,6 +67,12 @@
             <span>Quản Lý Kho Bãi</span>
           </a>
         </li>
+        <li>
+          <a href="phi-van-chuyen.html" class="nav-link">
+            <i class="bi bi-truck"></i>
+            <span>Phí Vận Chuyển</span>
+          </a>
+        </li>
       </ul>
 
       <div class="sidebar-footer">
@@ -76,9 +89,14 @@
     <main class="app-main">
       <!-- Header Bar -->
       <header class="app-header">
-        <div class="page-title-group">
-          <h1>Tổng Quan ERP Doanh Nghiệp</h1>
-          <p>Báo cáo hiệu suất kinh doanh, dòng tiền và cảnh báo tồn kho thời gian thực</p>
+        <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+          <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Mở danh mục menu">
+            <i class="bi bi-list"></i>
+          </button>
+          <div class="page-title-group">
+            <h1>Tổng Quan ERP Doanh Nghiệp</h1>
+            <p>Báo cáo hiệu suất kinh doanh, dòng tiền và cảnh báo tồn kho thời gian thực</p>
+          </div>
         </div>
 
         <div class="header-actions">
@@ -87,7 +105,7 @@
             <input type="text" placeholder="Tìm kiếm nhanh hệ thống...">
           </div>
           <a href="ban-hang.html" class="btn btn-primary">
-            <i class="bi bi-plus-circle-fill"></i> Bán Hàng Mới
+            <i class="bi bi-plus-circle-fill"></i> <span>Bán Hàng Mới</span>
           </a>
         </div>
       </header>
@@ -169,7 +187,9 @@
               <div class="card-title">
                 <i class="bi bi-receipt text-primary"></i> Đơn Bán Hàng Gần Đây
               </div>
-              <a href="ban-hang.html" style="font-size: 0.85rem; font-weight: 600; color: var(--primary); text-decoration: none;">Xem Tất Cả &rarr;</a>
+              <a href="ban-hang.html"
+                style="font-size: 0.85rem; font-weight: 600; color: var(--primary); text-decoration: none;">Xem Tất Cả
+                &rarr;</a>
             </div>
             <div class="table-container">
               <table class="custom-table">
@@ -195,7 +215,9 @@
               <div class="card-title">
                 <i class="bi bi-bell-fill text-warning"></i> Cảnh Báo Tồn Kho Thấp
               </div>
-              <a href="kho-bai.html" style="font-size: 0.85rem; font-weight: 600; color: var(--primary); text-decoration: none;">Nhập Kho &rarr;</a>
+              <a href="kho-bai.html"
+                style="font-size: 0.85rem; font-weight: 600; color: var(--primary); text-decoration: none;">Nhập Kho
+                &rarr;</a>
             </div>
             <div class="table-container">
               <table class="custom-table">
@@ -225,4 +247,5 @@
   <script src="js/common.js"></script>
   <script src="erp.js"></script>
 </body>
+
 </html>

@@ -10,7 +10,8 @@ const PIPELINE_STAGES = [
   { id: 'Contacted', label: 'Đã Liên Hệ', color: 'var(--warning)' },
   { id: 'Proposal', label: 'Gửi Báo Giá', color: 'var(--accent)' },
   { id: 'Negotiation', label: 'Thương Lượng', color: 'var(--primary)' },
-  { id: 'Won', label: 'Chốt Hợp Đồng', color: 'var(--success)' }
+  { id: 'Won', label: 'Chốt Hợp Đồng', color: 'var(--success)' },
+  { id: 'Lost', label: 'Thất Bại', color: 'var(--danger)' }
 ];
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -28,12 +29,112 @@ async function loadCrmData() {
   populateReportCustomerSelect();
 }
 
-function populateReportCustomerSelect() {
-  const select = document.getElementById('report-customer-select');
-  if (!select) return;
+function populateReportFilterDropdowns(options = {}) {
+  const { filterSales = 'All', filterRoute = 'All', filterCust = 'All' } = options;
 
-  select.innerHTML = '<option value="All">-- Tất cả khách hàng --</option>' + 
-    allCustomersList.map(c => `<option value="${c.name}">${c.code} - ${c.name}</option>`).join('');
+  const salesSelect = document.getElementById('report-sales-select');
+  const routeSelect = document.getElementById('report-route-select');
+  const custSelect = document.getElementById('report-customer-select');
+
+  // 1. Populate Sales dropdown (always contains all unique sales reps)
+  if (salesSelect) {
+    const currentSalesVal = filterSales !== 'All' ? filterSales : (salesSelect.value || 'All');
+    const uniqueSales = Array.from(new Set(allCustomersList.map(c => c.sales_person).filter(Boolean)));
+    salesSelect.innerHTML = '<option value="All">-- Tất cả Sales phụ trách --</option>' +
+      uniqueSales.map(s => `<option value="${s}">${s}</option>`).join('');
+    if (uniqueSales.includes(currentSalesVal)) {
+      salesSelect.value = currentSalesVal;
+    } else {
+      salesSelect.value = 'All';
+    }
+  }
+
+  // Determine customers filtered by Sales
+  const activeSales = salesSelect ? salesSelect.value : 'All';
+  let salesFilteredCustomers = allCustomersList;
+  if (activeSales !== 'All') {
+    salesFilteredCustomers = allCustomersList.filter(c => c.sales_person === activeSales);
+  }
+
+  // 2. Populate Route dropdown based on selected Sales Rep
+  if (routeSelect) {
+    const currentRouteVal = filterRoute !== 'All' ? filterRoute : (routeSelect.value || 'All');
+    const uniqueRoutes = Array.from(new Set(salesFilteredCustomers.map(c => c.route).filter(Boolean)));
+    routeSelect.innerHTML = '<option value="All">-- Tất cả tuyến công tác --</option>' +
+      uniqueRoutes.map(r => `<option value="${r}">${r}</option>`).join('');
+    if (uniqueRoutes.includes(currentRouteVal)) {
+      routeSelect.value = currentRouteVal;
+    } else {
+      routeSelect.value = 'All';
+    }
+  }
+
+  // Determine customers filtered by Sales AND Route
+  const activeRoute = routeSelect ? routeSelect.value : 'All';
+  let routeFilteredCustomers = salesFilteredCustomers;
+  if (activeRoute !== 'All') {
+    routeFilteredCustomers = salesFilteredCustomers.filter(c => c.route === activeRoute);
+  }
+
+  // 3. Populate Customer dropdown based on selected Sales Rep AND Route
+  if (custSelect) {
+    const currentCustVal = filterCust !== 'All' ? filterCust : (custSelect.value || 'All');
+    custSelect.innerHTML = '<option value="All">-- Tất cả khách hàng --</option>' + 
+      routeFilteredCustomers.map(c => `<option value="${c.name}">${c.code ? c.code + ' - ' : ''}${c.name}</option>`).join('');
+    if (routeFilteredCustomers.some(c => c.name === currentCustVal)) {
+      custSelect.value = currentCustVal;
+    } else {
+      custSelect.value = 'All';
+    }
+  }
+}
+
+function populateReportCustomerSelect() {
+  populateReportFilterDropdowns();
+}
+
+function onReportSalesChange() {
+  const salesSelect = document.getElementById('report-sales-select');
+  const selectedSales = salesSelect ? salesSelect.value : 'All';
+
+  // Re-populate child dropdowns (routes & customers)
+  populateReportFilterDropdowns({ filterSales: selectedSales, filterRoute: 'All', filterCust: 'All' });
+  generateGlobalPurchaseReport();
+}
+
+function onReportRouteChange() {
+  const salesSelect = document.getElementById('report-sales-select');
+  const routeSelect = document.getElementById('report-route-select');
+
+  const selectedSales = salesSelect ? salesSelect.value : 'All';
+  const selectedRoute = routeSelect ? routeSelect.value : 'All';
+
+  // Re-populate child customer dropdown
+  populateReportFilterDropdowns({ filterSales: selectedSales, filterRoute: selectedRoute, filterCust: 'All' });
+  generateGlobalPurchaseReport();
+}
+
+function onReportCustomerChange() {
+  generateGlobalPurchaseReport();
+}
+
+function resetReportFilters() {
+  const salesSelect = document.getElementById('report-sales-select');
+  const routeSelect = document.getElementById('report-route-select');
+  const custSelect = document.getElementById('report-customer-select');
+  const prodSearch = document.getElementById('report-product-search');
+  const dStart = document.getElementById('report-date-start');
+  const dEnd = document.getElementById('report-date-end');
+
+  if (salesSelect) salesSelect.value = 'All';
+  if (routeSelect) routeSelect.value = 'All';
+  if (custSelect) custSelect.value = 'All';
+  if (prodSearch) prodSearch.value = '';
+  if (dStart) dStart.value = '';
+  if (dEnd) dEnd.value = '';
+
+  populateReportFilterDropdowns({ filterSales: 'All', filterRoute: 'All', filterCust: 'All' });
+  generateGlobalPurchaseReport();
 }
 
 function switchCrmTab(tab) {
@@ -61,11 +162,33 @@ function switchCrmTab(tab) {
   }
 }
 
+function isShippingFeeItem(item) {
+  if (!item) return false;
+  if (item.is_shipping_fee) return true;
+  if (item.product_sku && (item.product_sku === 'PVC' || item.product_sku.startsWith('PVC-'))) return true;
+  if (item.product_name) {
+    const nameLower = item.product_name.toLowerCase();
+    if (nameLower.includes('phí vận chuyển') || nameLower.includes('vận chuyển -') || nameLower.startsWith('pvc -')) {
+      return true;
+    }
+  }
+  return false;
+}
+
 async function generateGlobalPurchaseReport() {
   if (!window.dbProvider) return;
 
   const orders = await window.dbProvider.getOrders();
   
+  // Build lookup map for customer route & sales_person
+  const customerMap = {};
+  allCustomersList.forEach(c => {
+    customerMap[c.name] = c;
+    if (c.code) customerMap[c.code] = c;
+  });
+
+  const routeFilter = document.getElementById('report-route-select') ? document.getElementById('report-route-select').value : 'All';
+  const salesFilter = document.getElementById('report-sales-select') ? document.getElementById('report-sales-select').value : 'All';
   const customerFilter = document.getElementById('report-customer-select') ? document.getElementById('report-customer-select').value : 'All';
   const productSearch = document.getElementById('report-product-search') ? document.getElementById('report-product-search').value.toLowerCase().trim() : '';
   const startDateStr = document.getElementById('report-date-start') ? document.getElementById('report-date-start').value : '';
@@ -77,35 +200,54 @@ async function generateGlobalPurchaseReport() {
   const reportRows = [];
 
   orders.forEach(order => {
-    // 1. Filter Customer
+    if (order.status === 'Cancelled') return;
+
+    const custProfile = customerMap[order.customer_name] || customerMap[order.customer_code] || {};
+    const route = custProfile.route || 'Chưa gán tuyến';
+    const salesPerson = custProfile.sales_person || 'Chưa phân công';
+
+    // 1. Filter Route
+    if (routeFilter !== 'All' && route !== routeFilter) return;
+
+    // 2. Filter Sales Person
+    if (salesFilter !== 'All' && salesPerson !== salesFilter) return;
+
+    // 3. Filter Customer
     if (customerFilter !== 'All' && order.customer_name !== customerFilter) return;
 
-    // 2. Filter Date Range
+    // 4. Filter Date Range
     if (order.created_at) {
       const oDate = new Date(order.created_at);
       if (startDate && oDate < startDate) return;
       if (endDate && oDate > endDate) return;
     }
 
-    // 3. Filter Items
-    const items = order.items || [{ product_name: 'Chi tiết đơn ' + order.order_code, quantity: 1, unit_price: order.final_amount, subtotal: order.final_amount }];
+    // 5. Filter Items (EXCLUDE SHIPPING FEES FROM SALES & PRODUCT MERCHANDISE)
+    const shipFeeVal = Number(order.shipping_fee) || 0;
+    const netOrderFinal = Math.max(0, (Number(order.final_amount) || 0) - shipFeeVal);
+    const items = order.items || [{ product_name: 'Chi tiết đơn ' + order.order_code, quantity: 1, unit_price: netOrderFinal, subtotal: netOrderFinal }];
     
     items.forEach(item => {
+      // Exclude shipping fee sub-items
+      if (isShippingFeeItem(item)) return;
+
       if (productSearch && !item.product_name.toLowerCase().includes(productSearch)) return;
 
       reportRows.push({
         customer_name: order.customer_name,
+        route: route,
+        sales_person: salesPerson,
         product_name: item.product_name,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        subtotal: item.subtotal,
+        quantity: Number(item.quantity) || 1,
+        unit_price: Number(item.unit_price) || 0,
+        subtotal: Number(item.subtotal) || 0,
         order_code: order.order_code,
         created_at: order.created_at
       });
     });
   });
 
-  // Calculate KPIs
+  // Calculate KPIs (Doanh số thuần không bao gồm phí vận chuyển)
   const uniqueCustomers = new Set(reportRows.map(r => r.customer_name)).size;
   const totalQty = reportRows.reduce((sum, r) => sum + (r.quantity || 0), 0);
   const totalAmount = reportRows.reduce((sum, r) => sum + (r.subtotal || 0), 0);
@@ -118,12 +260,60 @@ async function generateGlobalPurchaseReport() {
   if (kpiQty) kpiQty.textContent = totalQty;
   if (kpiAmount) kpiAmount.textContent = formatVND(totalAmount);
 
-  // Render Table
+  // Group Summaries by Route
+  const routeMap = {};
+  reportRows.forEach(r => {
+    if (!routeMap[r.route]) routeMap[r.route] = { customers: new Set(), total: 0 };
+    routeMap[r.route].customers.add(r.customer_name);
+    routeMap[r.route].total += (r.subtotal || 0);
+  });
+
+  const routeSummaryTbody = document.getElementById('report-route-summary-tbody');
+  if (routeSummaryTbody) {
+    const routeEntries = Object.entries(routeMap);
+    if (routeEntries.length === 0) {
+      routeSummaryTbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-subtle);">Chưa có dữ liệu</td></tr>`;
+    } else {
+      routeSummaryTbody.innerHTML = routeEntries.map(([rName, data]) => `
+        <tr>
+          <td><span class="badge badge-neutral" style="font-weight:600;"><i class="bi bi-geo-alt"></i> ${rName}</span></td>
+          <td style="text-align:center; font-weight:700;">${data.customers.size}</td>
+          <td style="text-align:right; font-weight:800; color:var(--primary);">${formatVND(data.total)}</td>
+        </tr>
+      `).join('');
+    }
+  }
+
+  // Group Summaries by Sales Person
+  const salesMap = {};
+  reportRows.forEach(r => {
+    if (!salesMap[r.sales_person]) salesMap[r.sales_person] = { customers: new Set(), total: 0 };
+    salesMap[r.sales_person].customers.add(r.customer_name);
+    salesMap[r.sales_person].total += (r.subtotal || 0);
+  });
+
+  const salesSummaryTbody = document.getElementById('report-sales-summary-tbody');
+  if (salesSummaryTbody) {
+    const salesEntries = Object.entries(salesMap);
+    if (salesEntries.length === 0) {
+      salesSummaryTbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-subtle);">Chưa có dữ liệu</td></tr>`;
+    } else {
+      salesSummaryTbody.innerHTML = salesEntries.map(([sName, data]) => `
+        <tr>
+          <td><span class="badge badge-info" style="font-weight:600;"><i class="bi bi-person-badge"></i> ${sName}</span></td>
+          <td style="text-align:center; font-weight:700;">${data.customers.size}</td>
+          <td style="text-align:right; font-weight:800; color:var(--success);">${formatVND(data.total)}</td>
+        </tr>
+      `).join('');
+    }
+  }
+
+  // Render Main Report Table
   const tbody = document.getElementById('global-report-tbody');
   if (!tbody) return;
 
   if (reportRows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:18px;">Không tìm thấy dữ liệu mua hàng nào phù hợp với bộ lọc</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:18px;">Không tìm thấy dữ liệu mua hàng nào phù hợp với bộ lọc</td></tr>`;
     return;
   }
 
@@ -131,6 +321,8 @@ async function generateGlobalPurchaseReport() {
     <tr>
       <td>${idx + 1}</td>
       <td><strong>${r.customer_name}</strong></td>
+      <td><span class="badge badge-neutral" style="font-weight:600;"><i class="bi bi-geo-alt"></i> ${r.route}</span></td>
+      <td><span class="badge badge-info" style="font-weight:600;"><i class="bi bi-person-badge"></i> ${r.sales_person}</span></td>
       <td style="color:var(--primary); font-weight:700;">${r.product_name}</td>
       <td style="font-weight:800;">${r.quantity}</td>
       <td>${formatVND(r.unit_price)}</td>
@@ -142,17 +334,150 @@ async function generateGlobalPurchaseReport() {
 }
 
 function resetReportFilters() {
+  const routeSelect = document.getElementById('report-route-select');
+  const salesSelect = document.getElementById('report-sales-select');
   const custSelect = document.getElementById('report-customer-select');
   const prodSearch = document.getElementById('report-product-search');
   const dStart = document.getElementById('report-date-start');
   const dEnd = document.getElementById('report-date-end');
 
+  if (routeSelect) routeSelect.value = 'All';
+  if (salesSelect) salesSelect.value = 'All';
   if (custSelect) custSelect.value = 'All';
   if (prodSearch) prodSearch.value = '';
   if (dStart) dStart.value = '';
   if (dEnd) dEnd.value = '';
 
   generateGlobalPurchaseReport();
+}
+
+function formatDateTimeLocal(isoString) {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return '';
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+function setQuickNextActivity(note, daysOffset, timeStr = '09:00') {
+  const targetDate = new Date();
+  targetDate.setDate(targetDate.getDate() + daysOffset);
+
+  const year = targetDate.getFullYear();
+  const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+  const day = String(targetDate.getDate()).padStart(2, '0');
+  const dateFormatted = `${year}-${month}-${day}`;
+
+  const nextDateInput = document.getElementById('lead-next-date');
+  const nextTimeInput = document.getElementById('lead-next-time');
+  const nextNoteInput = document.getElementById('lead-next-note');
+
+  if (nextDateInput) nextDateInput.value = dateFormatted;
+  if (nextTimeInput) nextTimeInput.value = timeStr;
+  if (nextNoteInput) nextNoteInput.value = note;
+}
+
+function clearLeadNextActivity() {
+  const nextDateInput = document.getElementById('lead-next-date');
+  const nextTimeInput = document.getElementById('lead-next-time');
+  const nextNoteInput = document.getElementById('lead-next-note');
+  if (nextDateInput) nextDateInput.value = '';
+  if (nextTimeInput) nextTimeInput.value = '09:00';
+  if (nextNoteInput) nextNoteInput.value = '';
+}
+
+function getDealAgingInfo(lead, stageId) {
+  // Không cảnh báo ngâm đối với Deal đã chốt thành công (Won) hoặc Thất bại (Lost)
+  if (stageId === 'Won' || stageId === 'Lost') {
+    return { isStale: false, days: 0, cardClass: '', badgeHtml: '' };
+  }
+
+  const stageTimeStr = lead.stage_updated_at || lead.created_at;
+  if (!stageTimeStr) {
+    return { isStale: false, days: 0, cardClass: '', badgeHtml: '' };
+  }
+
+  const stageDate = new Date(stageTimeStr);
+  if (isNaN(stageDate.getTime())) {
+    return { isStale: false, days: 0, cardClass: '', badgeHtml: '' };
+  }
+
+  const now = new Date();
+  const diffMs = now.getTime() - stageDate.getTime();
+  const daysInStage = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+
+  if (daysInStage >= 7) {
+    return {
+      isStale: true,
+      days: daysInStage,
+      cardClass: 'stale-danger',
+      badgeHtml: `<span class="stale-badge-danger" title="Cơ hội bị ngâm ${daysInStage} ngày ở bước này chưa tiến triển"><i class="bi bi-flag-fill"></i> 🚩 Ngâm ${daysInStage} ngày</span>`
+    };
+  }
+
+  if (daysInStage >= 3) {
+    return {
+      isStale: true,
+      days: daysInStage,
+      cardClass: 'stale-warning',
+      badgeHtml: `<span class="stale-badge-warning" title="Cơ hội đã ở bước này ${daysInStage} ngày"><i class="bi bi-hourglass-split"></i> ⏳ ${daysInStage} ngày</span>`
+    };
+  }
+
+  return {
+    isStale: false,
+    days: daysInStage,
+    cardClass: '',
+    badgeHtml: `<span style="font-size:0.72rem; color:var(--text-subtle);"><i class="bi bi-clock"></i> ${daysInStage === 0 ? 'Hôm nay' : daysInStage + ' ngày'}</span>`
+  };
+}
+
+function renderNextActivitySnippet(lead) {
+  if (!lead.next_activity_date && !lead.next_activity_note) return '';
+
+  let badgeHtml = '';
+  if (lead.next_activity_date) {
+    const actDate = new Date(lead.next_activity_date);
+    if (!isNaN(actDate.getTime())) {
+      const now = new Date();
+      const isOverdue = actDate < now;
+      const isToday = actDate.toDateString() === now.toDateString();
+      const tomorrow = new Date(now.getTime() + 86400000);
+      const isTomorrow = tomorrow.toDateString() === actDate.toDateString();
+
+      const timeStr = `${String(actDate.getHours()).padStart(2, '0')}:${String(actDate.getMinutes()).padStart(2, '0')}`;
+      const dateStr = `${String(actDate.getDate()).padStart(2, '0')}/${String(actDate.getMonth() + 1).padStart(2, '0')}`;
+
+      if (isOverdue) {
+        badgeHtml = `<span class="activity-badge-overdue" title="Lịch hẹn đã quá hạn"><i class="bi bi-alarm-fill"></i> Quá hạn: ${dateStr} ${timeStr}</span>`;
+      } else if (isToday) {
+        badgeHtml = `<span class="activity-badge-today" title="Lịch hẹn hôm nay"><i class="bi bi-bell-fill"></i> Hôm nay ${timeStr}</span>`;
+      } else if (isTomorrow) {
+        badgeHtml = `<span class="activity-badge-upcoming" title="Lịch hẹn ngày mai"><i class="bi bi-calendar-event"></i> Ngày mai ${timeStr}</span>`;
+      } else {
+        badgeHtml = `<span class="activity-badge-upcoming" title="Lịch hẹn tiếp theo"><i class="bi bi-calendar-check"></i> ${dateStr} ${timeStr}</span>`;
+      }
+    }
+  }
+
+  return `
+    <div class="activity-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">
+        <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);"><i class="bi bi-calendar-event"></i> Hẹn tiếp theo:</span>
+        ${badgeHtml}
+      </div>
+      ${lead.next_activity_note ? `
+        <div style="margin-top:3px; color:var(--text-main); font-weight:600; line-height:1.35; display:flex; align-items:flex-start; gap:4px;">
+          <i class="bi bi-pin-angle text-primary" style="font-size:0.8rem; margin-top:2px;"></i>
+          <span>${lead.next_activity_note}</span>
+        </div>
+      ` : ''}
+    </div>
+  `;
 }
 
 function renderKanbanBoard() {
@@ -178,11 +503,20 @@ function renderKanbanBoard() {
         <div class="column-cards">
           ${stageLeads.length === 0 ? `
             <div style="text-align:center; padding:20px; font-size:0.8rem; color:var(--text-subtle);">Chưa có cơ hội nào</div>
-          ` : stageLeads.map(lead => `
-            <div class="lead-card">
-              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
-                <div class="lead-name">${lead.name}</div>
-                <div style="display:flex; gap:4px;">
+          ` : stageLeads.map(lead => {
+            const aging = getDealAgingInfo(lead, stage.id);
+            const activityHtml = renderNextActivitySnippet(lead);
+
+            return `
+            <div class="lead-card ${aging.cardClass}">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px; gap:8px;">
+                <div style="flex:1; min-width:0;">
+                  <div class="lead-company-title" title="${lead.company || lead.name || 'Khách cá nhân'}">
+                    <i class="bi bi-building text-primary" style="font-size:0.88rem; flex-shrink:0;"></i>
+                    <span>${lead.company || lead.name || 'Khách cá nhân'}</span>
+                  </div>
+                </div>
+                <div style="display:flex; gap:4px; flex-shrink:0;">
                   <button class="btn btn-secondary" style="padding:2px 6px; font-size:0.72rem;" title="Sửa cơ hội" onclick="openEditLeadModal('${lead.id}')">
                     <i class="bi bi-pencil-square text-primary"></i> Sửa
                   </button>
@@ -191,9 +525,25 @@ function renderKanbanBoard() {
                   </button>
                 </div>
               </div>
-              <div class="lead-company"><i class="bi bi-building"></i> ${lead.company || 'Cá nhân'}</div>
+
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <div class="lead-contact-name">
+                  <i class="bi bi-person" style="font-size:0.85rem; flex-shrink:0;"></i>
+                  <span>Người LH: <strong>${lead.name || 'N/A'}</strong></span>
+                </div>
+                ${aging.badgeHtml}
+              </div>
+
               <div class="lead-value">${formatVND(lead.estimated_value)}</div>
+
+              ${activityHtml}
+
               ${lead.notes ? `<div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:6px;">${lead.notes}</div>` : ''}
+              ${lead.lost_reason ? `
+                <div style="font-size:0.78rem; color:#b91c1c; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; padding:5px 8px; margin-bottom:6px; line-height:1.35;">
+                  <strong><i class="bi bi-exclamation-octagon-fill"></i> Lý do:</strong> ${lead.lost_reason}
+                </div>
+              ` : ''}
               
               <div class="lead-meta">
                 <span><i class="bi bi-person"></i> ${lead.assigned_to || 'Chưa gán'}</span>
@@ -204,7 +554,8 @@ function renderKanbanBoard() {
                 ${getStageButtons(lead.id, stage.id)}
               </div>
             </div>
-          `).join('')}
+            `;
+          }).join('')}
         </div>
       </div>
     `;
@@ -212,13 +563,51 @@ function renderKanbanBoard() {
 }
 
 function getStageButtons(leadId, currentStage) {
-  const currentIndex = PIPELINE_STAGES.findIndex(s => s.id === currentStage);
   let html = '';
 
+  if (currentStage === 'Negotiation') {
+    // Thương Lượng: chuyển thẳng sang Chốt Hợp Đồng hoặc Thất Bại
+    html += `
+      <button class="btn btn-secondary" style="padding:4px 7px;" title="Lùi lại: Gửi Báo Giá" onclick="moveLeadStage('${leadId}', 'Proposal')">
+        <i class="bi bi-arrow-left"></i>
+      </button>
+      <button class="btn btn-success" style="background:#10b981; color:#fff; border-color:#10b981; padding:4px 9px; font-size:0.75rem; font-weight:700;" title="Chốt Hợp Đồng Thành Công" onclick="moveLeadStage('${leadId}', 'Won')">
+        <i class="bi bi-check-circle-fill"></i> Chốt HĐ
+      </button>
+      <button class="btn btn-danger" style="background:#fee2e2; color:var(--danger); border-color:#fca5a5; padding:4px 8px; font-size:0.75rem; font-weight:700;" title="Thương lượng thất bại" onclick="promptLostLead('${leadId}')">
+        <i class="bi bi-x-circle-fill"></i> Thất Bại
+      </button>
+    `;
+    return html;
+  }
+
+  if (currentStage === 'Won') {
+    html += `
+      <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem;" title="Lùi lại: Thương Lượng" onclick="moveLeadStage('${leadId}', 'Negotiation')">
+        <i class="bi bi-arrow-left"></i> Thương Lượng
+      </button>
+      <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem; color:var(--danger); border-color:#fca5a5;" title="Chuyển sang Thất Bại" onclick="promptLostLead('${leadId}')">
+        <i class="bi bi-x-circle"></i> Thất Bại
+      </button>
+    `;
+    return html;
+  }
+
+  if (currentStage === 'Lost') {
+    html += `
+      <button class="btn btn-secondary" style="padding:4px 9px; font-size:0.75rem; font-weight:600;" title="Khôi phục lại cơ hội về Thương Lượng" onclick="moveLeadStage('${leadId}', 'Negotiation')">
+        <i class="bi bi-arrow-counterclockwise text-primary"></i> Khôi phục Thương Lượng
+      </button>
+    `;
+    return html;
+  }
+
+  // Các giai đoạn trước (Lead, Contacted, Proposal)
+  const currentIndex = PIPELINE_STAGES.findIndex(s => s.id === currentStage);
   if (currentIndex > 0) {
     const prevStage = PIPELINE_STAGES[currentIndex - 1];
     html += `
-      <button class="btn btn-secondary" title="Lùi lại: ${prevStage.label}" onclick="moveLeadStage('${leadId}', '${prevStage.id}')">
+      <button class="btn btn-secondary" style="padding:4px 7px;" title="Lùi lại: ${prevStage.label}" onclick="moveLeadStage('${leadId}', '${prevStage.id}')">
         <i class="bi bi-arrow-left"></i>
       </button>
     `;
@@ -227,33 +616,128 @@ function getStageButtons(leadId, currentStage) {
   if (currentIndex < PIPELINE_STAGES.length - 1) {
     const nextStage = PIPELINE_STAGES[currentIndex + 1];
     html += `
-      <button class="btn btn-primary" title="Chuyển sang: ${nextStage.label}" onclick="moveLeadStage('${leadId}', '${nextStage.id}')">
+      <button class="btn btn-primary" style="padding:4px 9px; font-size:0.75rem;" title="Chuyển sang: ${nextStage.label}" onclick="moveLeadStage('${leadId}', '${nextStage.id}')">
         <i class="bi bi-arrow-right"></i> ${nextStage.label}
       </button>
     `;
   }
 
+  html += `
+    <button class="btn btn-secondary" style="padding:4px 7px; color:var(--danger); border-color:#fca5a5;" title="Đánh dấu Thất Bại" onclick="promptLostLead('${leadId}')">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  `;
+
   return html;
 }
 
-async function moveLeadStage(leadId, newStage) {
-  await window.dbProvider.updateLeadStage(leadId, newStage);
-  showToast('Đã cập nhật trạng thái cơ hội bán hàng!', 'success');
+let pendingLostLeadId = null;
+
+function promptLostLead(leadId) {
+  const lead = allLeads.find(l => l.id === leadId);
+  if (!lead) return;
+
+  pendingLostLeadId = leadId;
+  const nameEl = document.getElementById('lost-modal-lead-name');
+  const compEl = document.getElementById('lost-modal-lead-company');
+  const valEl = document.getElementById('lost-modal-lead-value');
+  const reasonEl = document.getElementById('lost-modal-reason');
+
+  if (compEl) compEl.textContent = lead.company || lead.name || 'Khách cá nhân';
+  if (nameEl) nameEl.innerHTML = `<i class="bi bi-person"></i> Người liên hệ: <strong>${lead.name || 'N/A'}</strong>`;
+  if (valEl) valEl.textContent = formatVND(lead.estimated_value || 0);
+  if (reasonEl) {
+    reasonEl.value = lead.lost_reason || '';
+  }
+
+  openModal('lost-reason-modal');
+  setTimeout(() => {
+    if (reasonEl) reasonEl.focus();
+  }, 100);
+}
+
+function setLostReasonSnippet(snippet) {
+  const reasonEl = document.getElementById('lost-modal-reason');
+  if (!reasonEl) return;
+  if (reasonEl.value.trim()) {
+    reasonEl.value = reasonEl.value.trim() + '; ' + snippet;
+  } else {
+    reasonEl.value = snippet;
+  }
+  reasonEl.focus();
+}
+
+async function confirmLostReason() {
+  if (!pendingLostLeadId) return;
+  const reasonEl = document.getElementById('lost-modal-reason');
+  const reason = reasonEl ? reasonEl.value.trim() : '';
+
+  if (!reason) {
+    showToast('Bắt buộc phải nhập nguyên nhân thất bại!', 'warning');
+    if (reasonEl) reasonEl.focus();
+    return;
+  }
+
+  await moveLeadStage(pendingLostLeadId, 'Lost', reason);
+  closeModal('lost-reason-modal');
+  pendingLostLeadId = null;
+}
+
+async function moveLeadStage(leadId, newStage, lostReason = '') {
+  if (newStage === 'Lost') {
+    if (!lostReason) {
+      promptLostLead(leadId);
+      return;
+    }
+  }
+
+  await window.dbProvider.updateLeadStage(leadId, newStage, lostReason);
+  if (newStage === 'Lost') {
+    showToast('Đã chuyển cơ hội sang trạng thái Thất Bại!', 'warning');
+  } else if (newStage === 'Won') {
+    showToast('Chúc mừng! Đã chốt hợp đồng thành công!', 'success');
+  } else {
+    showToast('Đã cập nhật trạng thái cơ hội bán hàng!', 'success');
+  }
   await loadCrmData();
+}
+
+function onLeadStageModalChange() {
+  const stage = document.getElementById('lead-stage').value;
+  const lostGroup = document.getElementById('lead-lost-reason-group');
+  if (lostGroup) {
+    if (stage === 'Lost') {
+      lostGroup.style.display = 'block';
+      const reasonEl = document.getElementById('lead-lost-reason');
+      if (reasonEl) reasonEl.focus();
+    } else {
+      lostGroup.style.display = 'none';
+    }
+  }
+}
+
+function formatDistanceKmDisplay(val) {
+  if (!val) return 'Chưa nhập';
+  const str = String(val).trim();
+  if (!str) return 'Chưa nhập';
+  if (str.toLowerCase().includes('km')) return str;
+  return str + ' km';
 }
 
 function renderCustomersTable() {
   const tbody = document.getElementById('customers-tbody');
   if (!tbody) return;
 
-  tbody.innerHTML = allCustomersList.map(c => `
+  tbody.innerHTML = allCustomersList.map(c => {
+    const distText = formatDistanceKmDisplay(c.distance_km || c.distance || c.email);
+    return `
     <tr>
       <td><span class="badge badge-neutral" style="font-weight:600;"><i class="bi bi-geo-alt"></i> ${c.route || 'Chưa gán tuyến'}</span></td>
       <td><strong>${c.sales_person || c.assigned_sales || 'Chưa gán'}</strong></td>
       <td><code>${c.code || 'KH---'}</code></td>
       <td><strong>${c.name}</strong></td>
       <td>${c.phone || 'N/A'}</td>
-      <td>${c.email || 'N/A'}</td>
+      <td><span class="badge badge-neutral" style="font-weight:600;"><i class="bi bi-signpost-split"></i> ${distText}</span></td>
       <td><span class="badge badge-neutral">${c.group_name || 'Khách thường'}</span></td>
       <td style="font-weight:700; color:${(c.current_debt || 0) > 0 ? 'var(--danger)' : 'var(--success)'}; text-align:right;">
         ${formatVND(c.current_debt || 0)}
@@ -272,7 +756,8 @@ function renderCustomersTable() {
         </div>
       </td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function openNewLeadModal() {
@@ -286,6 +771,11 @@ function openNewLeadModal() {
   document.getElementById('lead-email').value = '';
   document.getElementById('lead-value').value = '';
   document.getElementById('lead-stage').value = 'Lead';
+  document.getElementById('lead-lost-reason').value = '';
+  document.getElementById('lead-lost-reason-group').style.display = 'none';
+  if (document.getElementById('lead-next-date')) document.getElementById('lead-next-date').value = '';
+  if (document.getElementById('lead-next-time')) document.getElementById('lead-next-time').value = '09:00';
+  if (document.getElementById('lead-next-note')) document.getElementById('lead-next-note').value = '';
   document.getElementById('lead-assigned').value = 'Kinh doanh 1';
   document.getElementById('lead-notes').value = '';
 
@@ -297,7 +787,8 @@ function openEditLeadModal(leadId) {
   if (!lead) return;
 
   document.getElementById('lead-edit-id').value = lead.id;
-  document.getElementById('lead-modal-title').innerHTML = `<i class="bi bi-pencil-square text-primary"></i> Chỉnh Sửa Lead: <strong>${lead.name}</strong>`;
+  const leadTitle = lead.company ? `${lead.company} (${lead.name})` : lead.name;
+  document.getElementById('lead-modal-title').innerHTML = `<i class="bi bi-pencil-square text-primary"></i> Chỉnh Sửa Cơ Hội: <strong>${leadTitle}</strong>`;
   document.getElementById('lead-btn-save-label').textContent = 'Cập Nhật Cơ Hội';
 
   document.getElementById('lead-name').value = lead.name || '';
@@ -306,6 +797,34 @@ function openEditLeadModal(leadId) {
   document.getElementById('lead-email').value = lead.email || '';
   document.getElementById('lead-value').value = formatNumberWithDots(lead.estimated_value);
   document.getElementById('lead-stage').value = lead.stage || 'Lead';
+  document.getElementById('lead-lost-reason').value = lead.lost_reason || '';
+  if (lead.stage === 'Lost') {
+    document.getElementById('lead-lost-reason-group').style.display = 'block';
+  } else {
+    document.getElementById('lead-lost-reason-group').style.display = 'none';
+  }
+
+  // Tách ngày và giờ riêng biệt từ lead.next_activity_date
+  if (lead.next_activity_date) {
+    const actDate = new Date(lead.next_activity_date);
+    if (!isNaN(actDate.getTime())) {
+      const year = actDate.getFullYear();
+      const month = String(actDate.getMonth() + 1).padStart(2, '0');
+      const day = String(actDate.getDate()).padStart(2, '0');
+      const hours = String(actDate.getHours()).padStart(2, '0');
+      const minutes = String(actDate.getMinutes()).padStart(2, '0');
+      if (document.getElementById('lead-next-date')) document.getElementById('lead-next-date').value = `${year}-${month}-${day}`;
+      if (document.getElementById('lead-next-time')) document.getElementById('lead-next-time').value = `${hours}:${minutes}`;
+    } else {
+      if (document.getElementById('lead-next-date')) document.getElementById('lead-next-date').value = '';
+      if (document.getElementById('lead-next-time')) document.getElementById('lead-next-time').value = '09:00';
+    }
+  } else {
+    if (document.getElementById('lead-next-date')) document.getElementById('lead-next-date').value = '';
+    if (document.getElementById('lead-next-time')) document.getElementById('lead-next-time').value = '09:00';
+  }
+
+  if (document.getElementById('lead-next-note')) document.getElementById('lead-next-note').value = lead.next_activity_note || '';
   document.getElementById('lead-assigned').value = lead.assigned_to || 'Kinh doanh 1';
   document.getElementById('lead-notes').value = lead.notes || '';
 
@@ -320,23 +839,51 @@ async function submitCreateLead() {
   const email = document.getElementById('lead-email').value.trim();
   const value = parseFormattedNumber(document.getElementById('lead-value').value);
   const stage = document.getElementById('lead-stage').value;
+  const lostReason = document.getElementById('lead-lost-reason').value.trim();
+
+  // Kết hợp ngày và giờ
+  const nextDateVal = document.getElementById('lead-next-date') ? document.getElementById('lead-next-date').value : '';
+  const nextTimeVal = document.getElementById('lead-next-time') ? (document.getElementById('lead-next-time').value || '09:00') : '09:00';
+  const nextNote = document.getElementById('lead-next-note') ? document.getElementById('lead-next-note').value.trim() : '';
+
+  let nextActivityDate = null;
+  if (nextDateVal) {
+    const combinedDate = new Date(`${nextDateVal}T${nextTimeVal}:00`);
+    if (!isNaN(combinedDate.getTime())) {
+      nextActivityDate = combinedDate.toISOString();
+    }
+  }
+
   const assigned = document.getElementById('lead-assigned').value.trim();
   const notes = document.getElementById('lead-notes').value.trim();
 
-  if (!name) {
-    showToast('Vui lòng nhập tên người liên hệ!', 'warning');
+  if (!name && !company) {
+    showToast('Vui lòng nhập tên công ty hoặc người liên hệ!', 'warning');
+    return;
+  }
+
+  if (stage === 'Lost' && !lostReason) {
+    showToast('Bắt buộc phải nhập nguyên nhân thất bại khi chọn trạng thái Thất Bại!', 'warning');
+    document.getElementById('lead-lost-reason').focus();
     return;
   }
 
   if (editId) {
     const updates = {
-      name, company, phone, email, estimated_value: value, stage, assigned_to: assigned, notes
+      name, company, phone, email, estimated_value: value, stage, assigned_to: assigned, notes,
+      lost_reason: stage === 'Lost' ? lostReason : '',
+      next_activity_date: nextActivityDate,
+      next_activity_note: nextNote
     };
     await window.dbProvider.updateLead(editId, updates);
     showToast('Cập nhật cơ hội bán hàng thành công!', 'success');
   } else {
     const newLead = {
-      name, company, phone, email, estimated_value: value, assigned_to: assigned, notes, stage
+      name: name || company, company, phone, email, estimated_value: value, assigned_to: assigned, notes, stage,
+      lost_reason: stage === 'Lost' ? lostReason : '',
+      next_activity_date: nextActivityDate,
+      next_activity_note: nextNote,
+      stage_updated_at: new Date().toISOString()
     };
     await window.dbProvider.addLead(newLead);
     showToast('Thêm cơ hội bán hàng mới thành công!', 'success');
@@ -348,7 +895,7 @@ async function submitCreateLead() {
 
 async function deleteLeadConfirm(leadId) {
   const lead = allLeads.find(l => l.id === leadId);
-  const name = lead ? lead.name : 'cơ hội này';
+  const name = lead ? (lead.company ? `${lead.company} (${lead.name})` : lead.name) : 'cơ hội này';
   
   if (confirm(`Bạn có chắc chắn muốn xóa cơ hội bán hàng "${name}"?`)) {
     await window.dbProvider.deleteLead(leadId);
@@ -412,7 +959,7 @@ function openEditCustomerModal(customerId) {
   document.getElementById('cust-route').value = cust.route || '';
   document.getElementById('cust-sales').value = cust.sales_person || cust.assigned_sales || '';
   document.getElementById('cust-phone').value = cust.phone || '';
-  document.getElementById('cust-email').value = cust.email || '';
+  document.getElementById('cust-email').value = cust.distance_km || cust.distance || cust.email || '';
   document.getElementById('cust-group').value = cust.group_name || 'Khách thường';
   document.getElementById('cust-address').value = cust.address || '';
 
@@ -427,45 +974,80 @@ function openEditCustomerModal(customerId) {
 }
 
 async function submitCreateCustomer() {
-  const editId = document.getElementById('cust-edit-id').value;
-  const code = document.getElementById('cust-code').value.trim();
-  const name = document.getElementById('cust-name').value.trim();
-  const route = document.getElementById('cust-route') ? document.getElementById('cust-route').value.trim() : '';
-  const sales_person = document.getElementById('cust-sales') ? document.getElementById('cust-sales').value.trim() : '';
-  const phone = document.getElementById('cust-phone').value.trim();
-  const email = document.getElementById('cust-email').value.trim();
-  const group_name = document.getElementById('cust-group').value;
-  const address = document.getElementById('cust-address').value.trim();
+  const editIdEl = document.getElementById('cust-edit-id');
+  const codeEl = document.getElementById('cust-code');
+  const nameEl = document.getElementById('cust-name');
+  const routeEl = document.getElementById('cust-route');
+  const salesEl = document.getElementById('cust-sales');
+  const phoneEl = document.getElementById('cust-phone');
+  const emailEl = document.getElementById('cust-email');
+  const groupEl = document.getElementById('cust-group');
+  const addressEl = document.getElementById('cust-address');
 
-  if (!name) {
-    showToast('Vui lòng nhập tên khách hàng!', 'warning');
+  if (!nameEl || !nameEl.value.trim()) {
+    showToast('Vui lòng nhập tên khách hàng / công ty!', 'warning');
+    if (nameEl) nameEl.focus();
     return;
   }
 
-  if (editId) {
-    const updates = {
-      code: code || 'KH' + Math.floor(100 + Math.random() * 900),
-      name,
-      route,
-      sales_person,
-      phone,
-      email,
-      group_name,
-      address
-    };
-    await window.dbProvider.updateCustomer(editId, updates);
-    showToast('Đã cập nhật thông tin khách hàng thành công!', 'success');
-  } else {
-    const newCustomer = {
-      code: code || 'KH' + Math.floor(100 + Math.random() * 900),
-      name, route, sales_person, phone, email, group_name, address, type: 'Customer', current_debt: 0
-    };
-    await window.dbProvider.addCustomer(newCustomer);
-    showToast('Tạo hồ sơ khách hàng mới thành công!', 'success');
-  }
+  const editId = editIdEl ? editIdEl.value : '';
+  const code = codeEl ? codeEl.value.trim() : '';
+  const name = nameEl.value.trim();
+  const route = routeEl ? routeEl.value.trim() : '';
+  const sales_person = salesEl ? salesEl.value.trim() : '';
+  const phone = phoneEl ? phoneEl.value.trim() : '';
+  const distance_km = emailEl ? emailEl.value.trim() : '';
+  const group_name = groupEl ? groupEl.value : 'Khách thường';
+  const address = addressEl ? addressEl.value.trim() : '';
 
-  closeModal('customer-modal');
-  await loadCrmData();
+  try {
+    if (editId) {
+      const updates = {
+        code: code || 'KH' + Math.floor(100 + Math.random() * 900),
+        name,
+        route,
+        sales_person,
+        phone,
+        distance_km,
+        group_name,
+        address
+      };
+      await window.dbProvider.updateCustomer(editId, updates);
+      showToast('Đã cập nhật thông tin khách hàng thành công!', 'success');
+    } else {
+      if (code) {
+        const existing = allCustomersList.find(c => c.code && c.code.toLowerCase() === code.toLowerCase());
+        if (existing) {
+          showToast(`Mã khách hàng "${code}" đã tồn tại! Vui lòng nhập mã khác hoặc để trống để tạo tự động.`, 'warning');
+          if (codeEl) codeEl.focus();
+          return;
+        }
+      }
+
+      const finalCode = code || 'KH' + Math.floor(100 + Math.random() * 900);
+      const newCustomer = {
+        code: finalCode,
+        name,
+        route,
+        sales_person,
+        phone,
+        distance_km,
+        group_name,
+        address,
+        type: 'Customer',
+        current_debt: 0
+      };
+      await window.dbProvider.addCustomer(newCustomer);
+      showToast('Tạo hồ sơ khách hàng mới thành công!', 'success');
+    }
+
+    closeModal('customer-modal');
+    await loadCrmData();
+    switchCrmTab('directory');
+  } catch (err) {
+    console.error('Lỗi khi lưu khách hàng:', err);
+    showToast(err.message || 'Không thể lưu khách hàng!', 'danger');
+  }
 }
 
 // 360° CUSTOMER FULL LEDGER LOGIC WITH DATE FILTER & PRODUCT BREAKDOWN
@@ -518,24 +1100,30 @@ function filterCustomerHistoryByDate() {
   const filteredReturns = currentCustomerHistoryRaw.returns.filter(r => filterByTime(r.created_at));
   const filteredPayments = currentCustomerHistoryRaw.payments.filter(p => filterByTime(p.created_at));
 
-  // Compute KPI summaries based on filtered timeframe
-  const totalPurchases = filteredOrders.reduce((sum, o) => sum + (o.final_amount || 0), 0);
+  // Compute KPI summaries based on filtered timeframe (Doanh số mua hàng thuần không gồm phí vận chuyển)
+  const totalPurchases = filteredOrders.reduce((sum, o) => {
+    const shipFee = Number(o.shipping_fee) || 0;
+    return sum + Math.max(0, (Number(o.final_amount) || 0) - shipFee);
+  }, 0);
   const totalReturns = filteredReturns.reduce((sum, r) => sum + (r.total_refund || 0), 0);
 
   document.getElementById('cust-kpi-purchases').textContent = formatVND(totalPurchases);
   document.getElementById('cust-kpi-returns').textContent = formatVND(totalReturns);
   document.getElementById('cust-kpi-debt').textContent = formatVND(currentCustomerObj ? currentCustomerObj.current_debt || 0 : 0);
 
-  // Extract individual purchased items list across filtered orders
+  // Extract individual purchased merchandise items list across filtered orders (excluding shipping fee)
   const purchasedProductsList = [];
   filteredOrders.forEach(o => {
-    const items = o.items || [{ product_name: 'Chi tiết đơn ' + o.order_code, quantity: 1, unit_price: o.final_amount, subtotal: o.final_amount }];
+    const shipFeeVal = Number(o.shipping_fee) || 0;
+    const netOrderFinal = Math.max(0, (Number(o.final_amount) || 0) - shipFeeVal);
+    const items = o.items || [{ product_name: 'Chi tiết đơn ' + o.order_code, quantity: 1, unit_price: netOrderFinal, subtotal: netOrderFinal }];
     items.forEach(i => {
+      if (isShippingFeeItem(i)) return;
       purchasedProductsList.push({
         product_name: i.product_name,
-        quantity: i.quantity,
-        unit_price: i.unit_price,
-        subtotal: i.subtotal,
+        quantity: Number(i.quantity) || 1,
+        unit_price: Number(i.unit_price) || 0,
+        subtotal: Number(i.subtotal) || 0,
         order_code: o.order_code,
         created_at: o.created_at
       });

@@ -14,10 +14,15 @@ async function loadDashboardData() {
   const debts = await window.dbProvider.getDebts();
   const leads = await window.dbProvider.getLeads();
 
-  // 1. Compute KPIs
-  const totalRevenue = orders.reduce((sum, o) => sum + (o.final_amount || 0), 0);
-  const totalReceivables = debts.filter(d => d.type === 'Receivable').reduce((sum, d) => sum + (d.remaining_amount || 0), 0);
-  const inventoryValuation = products.reduce((sum, p) => sum + ((p.cost_price || 0) * (p.stock_quantity || 0)), 0);
+  // 1. Compute KPIs (Doanh số thuần không bao gồm phí vận chuyển)
+  const totalRevenue = orders.reduce((sum, o) => {
+    if (o.status === 'Cancelled') return sum;
+    const orderFinal = Number(o.final_amount) || 0;
+    const shipFee = Number(o.shipping_fee) || 0;
+    return sum + Math.max(0, orderFinal - shipFee);
+  }, 0);
+  const totalReceivables = debts.filter(d => d.type === 'Receivable').reduce((sum, d) => sum + (Number(d.remaining_amount) || 0), 0);
+  const inventoryValuation = products.reduce((sum, p) => sum + ((Number(p.cost_price) || 0) * (Number(p.stock_quantity) || 0)), 0);
   const activeLeadsCount = leads.length;
 
   document.getElementById('kpi-revenue').textContent = formatVND(totalRevenue);
@@ -54,7 +59,10 @@ function renderRevenueChart(orders) {
         const date = new Date(o.created_at);
         if (!isNaN(date.getTime())) {
           const month = date.getMonth(); // 0 - 11
-          revenueData[month] += (o.final_amount || 0) / 1000000;
+          const orderFinal = Number(o.final_amount) || 0;
+          const shipFee = Number(o.shipping_fee) || 0;
+          const netSales = Math.max(0, orderFinal - shipFee);
+          revenueData[month] += netSales / 1000000;
         }
       }
     });

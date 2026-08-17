@@ -4,9 +4,9 @@
 
 .dashboard-charts-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 24px;
-  margin-bottom: 28px;
+  grid-template-columns: 1.8fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .chart-card {
@@ -16,19 +16,34 @@
 
 .chart-container {
   position: relative;
-  height: 300px;
+  height: 190px;
   width: 100%;
 }
 
 .dashboard-tables-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: 12px;
 }
 
 @media (max-width: 1200px) {
   .dashboard-charts-grid,
   .dashboard-tables-grid {
     grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
   }
 }
+
+@media (max-width: 768px) {
+  .dashboard-charts-grid,
+  .dashboard-tables-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .chart-container {
+    height: 170px;
+  }
+}
+

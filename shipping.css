@@ -1,0 +1,689 @@
+/* =======================================================
+   SHIPPING & DELIVERY FEE MANAGEMENT (SHIPPING.CSS)
+   ======================================================= */
+
+/* --- Layout & Sections --- */
+.shipping-grid-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 1024px) {
+  .shipping-grid-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Calculator Card Styles --- */
+.calc-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  overflow: visible;
+}
+
+.calc-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background: linear-gradient(90deg, var(--primary), var(--accent), var(--info));
+}
+
+.calc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+}
+
+.calc-header-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.calc-header-title i {
+  color: var(--primary);
+  font-size: 1.15rem;
+}
+
+/* Distance Visual Slider Bar */
+.distance-slider-group {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+}
+
+.distance-value-display {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.distance-number {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: -0.5px;
+}
+
+.distance-range-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  outline: none;
+  background: #cbd5e1;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.distance-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  box-shadow: 0 0 8px var(--primary-glow);
+  border: 2px solid #ffffff;
+  transition: transform 0.15s ease;
+}
+
+.distance-range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.distance-bracket-pills {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.distance-pill-btn {
+  font-size: 0.74rem;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-weight: 600;
+  transition: var(--transition-fast);
+}
+
+.distance-pill-btn:hover,
+.distance-pill-btn.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+/* Category Selection Rows */
+.category-calc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.category-calc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  gap: 8px;
+  transition: var(--transition-fast);
+}
+
+.category-calc-row:hover {
+  border-color: var(--primary);
+  background: rgba(99, 102, 241, 0.04);
+}
+
+.category-info-col {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.category-badge-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+[data-theme="dark"] .category-badge-icon {
+  background: rgba(99, 102, 241, 0.2);
+}
+
+/* =======================================================
+   SEARCHABLE SELECT / COMBOBOX STYLES (CUSTOMERS & SKUS)
+   ======================================================= */
+.search-select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.search-select-icon {
+  position: absolute;
+  left: 11px;
+  color: var(--primary);
+  font-size: 0.85rem;
+  pointer-events: none;
+  z-index: 2;
+  transition: var(--transition-fast);
+}
+
+.search-select-input {
+  padding-left: 32px !important;
+  padding-right: 30px !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  height: 38px !important;
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--text-main) !important;
+  cursor: text;
+  width: 100%;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.sku-search-input {
+  height: 34px !important;
+  font-size: 0.82rem !important;
+  padding-left: 30px !important;
+  padding-right: 28px !important;
+}
+
+.search-select-input:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px var(--primary-glow) !important;
+}
+
+.btn-clear-select {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--text-subtle);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+  z-index: 2;
+}
+
+.btn-clear-select:hover {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.search-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 1050;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg), 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+  max-height: 250px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.search-dropdown-item {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.search-dropdown-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.search-dropdown-item:hover,
+.search-dropdown-item.selected {
+  background: var(--primary-light);
+}
+
+[data-theme="dark"] .search-dropdown-item:hover,
+[data-theme="dark"] .search-dropdown-item.selected {
+  background: rgba(99, 102, 241, 0.18);
+}
+
+.dropdown-item-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-main);
+}
+
+.item-title {
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.search-dropdown-item:hover .item-title,
+.search-dropdown-item.selected .item-title {
+  color: var(--primary);
+}
+
+.dropdown-item-sub {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.badge-code {
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--primary);
+  font-weight: 800;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.badge-dist {
+  background: #e0e7ff;
+  color: #3730a3;
+  font-weight: 700;
+  font-size: 0.72rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+[data-theme="dark"] .badge-dist {
+  background: rgba(99, 102, 241, 0.25);
+  color: #a5b4fc;
+}
+
+.badge-nodist {
+  background: var(--bg-subtle);
+  color: var(--text-subtle);
+  font-size: 0.72rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.badge-unit {
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  font-weight: 600;
+  font-size: 0.7rem;
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.badge-price {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--success);
+  white-space: nowrap;
+}
+
+.sku-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* --- Fee Result & Breakdown Panel --- */
+.fee-result-panel {
+  background: linear-gradient(145deg, #0f172a, #1e293b);
+  color: #ffffff;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+}
+
+[data-theme="dark"] .fee-result-panel {
+  background: linear-gradient(145deg, #090d16, #151c2c);
+  border: 1px solid #2e3a50;
+}
+
+.result-total-box {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+  padding-bottom: 10px;
+}
+
+.result-total-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.result-total-amount {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #38bdf8;
+  text-shadow: 0 2px 8px rgba(56, 189, 248, 0.3);
+  letter-spacing: -0.5px;
+}
+
+.result-breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.breakdown-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
+.breakdown-row strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.breakdown-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+}
+
+.free-shipping-banner {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid #10b981;
+  color: #34d399;
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* --- 2D Interactive Pricing Matrix Grid --- */
+.matrix-container {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+}
+
+.matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.matrix-table th {
+  background: var(--bg-subtle);
+  padding: 12px 16px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-main);
+  border-bottom: 2px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.matrix-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.matrix-table tbody tr:hover {
+  background: var(--bg-subtle);
+}
+
+.matrix-category-header {
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-main);
+}
+
+.matrix-cell-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  transition: var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.matrix-cell-box:focus-within,
+.matrix-cell-box:hover {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-glow);
+}
+
+.matrix-price-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-main);
+  background: transparent;
+  text-align: right;
+}
+
+.matrix-subtext {
+  font-size: 0.7rem;
+  color: var(--text-subtle);
+  text-align: right;
+}
+
+/* --- Switch Toggle --- */
+.switch-toggle {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+}
+
+.switch-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e1;
+  transition: .2s;
+  border-radius: 22px;
+}
+
+.switch-slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .2s;
+  border-radius: 50%;
+}
+
+input:checked + .switch-slider {
+  background-color: var(--success);
+}
+
+input:checked + .switch-slider:before {
+  transform: translateX(18px);
+}
+
+/* --- Badges for Distance & Rules --- */
+.badge-distance {
+  background: #e0e7ff;
+  color: #3730a3;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+[data-theme="dark"] .badge-distance {
+  background: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+}
+
+.badge-category {
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.76rem;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* --- Quick Actions in Customer Distance Table --- */
+.quick-distance-input {
+  width: 80px;
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: right;
+  background: var(--bg-surface);
+  color: var(--text-main);
+}
+
+.quick-distance-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* Responsive Mobile Adjustments for Shipping */
+@media (max-width: 768px) {
+  .shipping-grid-layout {
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .calc-card {
+    padding: 14px;
+    gap: 14px;
+  }
+  .fee-result-panel {
+    padding: 16px;
+  }
+  .category-calc-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .distance-number {
+    font-size: 1.35rem;
+  }
+}
+
+/* Quotation Print Styling */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .app-sidebar, .app-header, .tab-navigation-bar, .header-actions, .btn {
+    display: none !important;
+  }
+  .app-main {
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
+  .calc-card, .fee-result-panel {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+  }
+}
