@@ -29,6 +29,7 @@ CRM/
 ├── 📄 crm.html                # Phân hệ: CRM Khách Hàng & Pipeline Bán Hàng
 ├── 📄 kho-bai.html            # Phân hệ: Quản Lý Kho Bãi & Nhà Cung Cấp
 ├── 📄 phi-van-chuyen.html     # Phân hệ: Quản Lý Quy Tắc Cước Vận Chuyển
+├── 📄 phat-mau.html           # Phân hệ: Quản Lý Phát Mẫu Sản Phẩm Cho Cửa Hàng
 │
 ├── 📂 css/                    # Tầng Định Kiểu & Design System
 │   ├── common.css             # Core Design System, Variables, Sidebar, Modal, Badges
@@ -37,7 +38,8 @@ CRM/
 │   ├── debts.css              # Styles cho module Quản Lý Công Nợ
 │   ├── crm.css                # Styles cho module CRM & Kanban Pipeline
 │   ├── inventory.css          # Styles cho module Kho Bãi & Nhà Cung Cấp
-│   └── shipping.css           # Styles cho module Phí Vận Chuyển
+│   ├── shipping.css           # Styles cho module Phí Vận Chuyển
+│   └── samples.css            # Styles cho module Phát Mẫu Sản Phẩm
 │
 ├── 📂 js/                     # Tầng Logic Nghiệp Vụ & Data Layer
 │   ├── supabase-client.js     # Data Access Layer: Dual-engine Provider (Supabase + LocalStorage)
@@ -47,7 +49,8 @@ CRM/
 │   ├── debts.js               # Xử lý sổ nợ, Thu/Chi nợ, Đối soát kỳ, In ấn A4
 │   ├── crm.js                 # Xử lý Leads, Khách hàng, Kanban kéo thả, Tuyến bán hàng
 │   ├── inventory.js           # Xử lý Phiếu nhập kho, Tồn kho, Nhà cung cấp
-│   └── shipping.js            # Engine tính cước vận chuyển tự động
+│   ├── shipping.js            # Engine tính cước vận chuyển tự động
+│   └── samples.js             # Xử lý theo dõi phát mẫu, ma trận cửa hàng & in biên bản giao nhận
 │
 ├── 📂 config/                 # Cấu hình & Kịch bản Database
 │   └── supabase-schema.sql    # Toàn bộ SQL Schema & Migration script cho Supabase

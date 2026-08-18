@@ -19,7 +19,8 @@ const DEFAULT_INITIAL_DATA = {
   debt_payments: [],
   returns: [],
   inbound_orders: [],
-  shipping_rules: []
+  shipping_rules: [],
+  product_samples: []
 };
 
 // Helper functions for UUID validation and Supabase payload sanitization
@@ -1504,6 +1505,7 @@ class SupabaseProvider {
     let prev = 0;
     let next = 0;
     let prodName = '';
+    const numQty = typeof parseQuantity === 'function' ? parseQuantity(qty) : (parseFloat(qty) || 0);
 
     const db = this.getLocalStorageDb();
     let prod = db.products.find(p => p.id === productId);
@@ -1512,8 +1514,8 @@ class SupabaseProvider {
       try {
         const { data: supaProd } = await this.supabase.from('products').select('*').eq('id', productId).single();
         if (supaProd) {
-          prev = supaProd.stock_quantity || 0;
-          next = type === 'StockIn' ? prev + qty : Math.max(0, prev - qty);
+          prev = Number(supaProd.stock_quantity) || 0;
+          next = type === 'StockIn' ? Math.round((prev + numQty) * 100) / 100 : Math.max(0, Math.round((prev - numQty) * 100) / 100);
           prodName = supaProd.name;
 
           await this.supabase.from('products').update({ stock_quantity: next }).eq('id', productId);
@@ -1523,7 +1525,7 @@ class SupabaseProvider {
             type: type,
             product_id: productId,
             product_name: prodName,
-            quantity: qty,
+            quantity: numQty,
             previous_stock: prev,
             new_stock: next,
             reason: reason || (type === 'StockIn' ? 'Nhập bổ sung kho' : 'Xuất hủy / Chuyển kho'),
@@ -1537,8 +1539,8 @@ class SupabaseProvider {
     }
 
     if (prod) {
-      prev = prod.stock_quantity;
-      next = type === 'StockIn' ? prev + qty : Math.max(0, prev - qty);
+      prev = Number(prod.stock_quantity) || 0;
+      next = type === 'StockIn' ? Math.round((prev + numQty) * 100) / 100 : Math.max(0, Math.round((prev - numQty) * 100) / 100);
       prod.stock_quantity = next;
       prodName = prodName || prod.name;
     }
@@ -1550,7 +1552,7 @@ class SupabaseProvider {
         code: (type === 'StockIn' ? 'NK-' : 'XK-') + Math.floor(1000 + Math.random() * 9000),
         type: type,
         product_name: prodName,
-        quantity: qty,
+        quantity: numQty,
         previous_stock: prev,
         new_stock: next,
         reason: reason || (type === 'StockIn' ? 'Nhập bổ sung kho' : 'Xuất hủy / Chuyển kho'),
@@ -2478,6 +2480,490 @@ class SupabaseProvider {
         this.saveLocalStorageDb(db);
       }
     }
+  }
+
+  // --- PRODUCT SAMPLES (PHÁT MẪU SẢN PHẨM) ---
+  async getSamples() {
+    return this.getProductSamples();
+  }
+
+  async getProductSamples() {
+    let liveSamples = [];
+    if (this.isLiveMode) {
+      try {
+        const { data, error } = await this.supabase.from('product_samples').select('*').order('created_at', { ascending: false });
+        if (!error && Array.isArray(data)) {
+          liveSamples = data;
+        } else if (error) {
+          console.warn('Supabase getProductSamples notice:', error);
+        }
+      } catch (err) {
+        console.error('Error fetching product_samples from Supabase:', err);
+      }
+    }
+
+    const db = this.getLocalStorageDb();
+    const localSamples = Array.isArray(db.product_samples) ? db.product_samples : [];
+
+    if (this.isLiveMode && liveSamples.length > 0) {
+      db.product_samples = liveSamples;
+      this.saveLocalStorageDb(db);
+      return liveSamples;
+    }
+
+    return localSamples;
+  }
+
+  async addProductSample(sample) {
+    sample.id = sample.id || 'sample_' + Date.now();
+    sample.code = sample.code || 'PM' + new Date().toISOString().slice(2, 10).replace(/-/g, '') + '-' + Math.floor(100 + Math.random() * 900);
+    sample.quantity = typeof parseQuantity === 'function' ? parseQuantity(sample.quantity) : (parseFloat(sample.quantity) || 1);
+    sample.unit = sample.unit || 'Mẫu';
+    sample.status = sample.status || 'Displaying';
+    sample.handover_date = sample.handover_date || new Date().toISOString().split('T')[0];
+    sample.items = Array.isArray(sample.items) ? sample.items : [];
+    sample.created_at = sample.created_at || new Date().toISOString();
+    sample.updated_at = new Date().toISOString();
+
+    // Normalize quantities inside items
+    if (sample.items.length > 0) {
+      sample.items.forEach(it => {
+        it.quantity = typeof parseQuantity === 'function' ? parseQuantity(it.quantity) : (parseFloat(it.quantity) || 1);
+      });
+    }
+
+    let createdSample = { ...sample };
+
+    if (this.isLiveMode) {
+      try {
+        const payload = prepareSupabasePayload(sample);
+        const { data, error } = await this.supabase.from('product_samples').insert([payload]).select();
+        if (error) {
+          console.error('Supabase addProductSample error:', error);
+          if (error.code === '23505') {
+            throw new Error(`Mã phiếu phát mẫu "${sample.code}" đã tồn tại trên CSDL! Vui lòng chọn mã khác.`);
+          }
+        } else if (data && data.length > 0) {
+          createdSample = { ...sample, id: data[0].id };
+        }
+      } catch (e) {
+        console.error('Supabase addProductSample exception:', e);
+      }
+    }
+
+    const db = this.getLocalStorageDb();
+    if (!Array.isArray(db.product_samples)) db.product_samples = [];
+    if (!Array.isArray(db.products)) db.products = [];
+    if (!Array.isArray(db.inventory_transactions)) db.inventory_transactions = [];
+
+    // --- TRỪ TỒN KHO KHI XUẤT CẤP PHÁT MẪU (STOCK OUT DEDUCTION) ---
+    const itemsToDeduct = sample.items && sample.items.length > 0 ? sample.items : [{
+      product_id: sample.product_id,
+      sku: sample.product_sku,
+      name: sample.product_name,
+      quantity: sample.quantity,
+      unit: sample.unit
+    }];
+
+    for (let i = 0; i < itemsToDeduct.length; i++) {
+      const it = itemsToDeduct[i];
+      const itemQty = typeof parseQuantity === 'function' ? parseQuantity(it.quantity) : (parseFloat(it.quantity) || 0);
+      if (itemQty <= 0) continue;
+
+      let localProd = null;
+      if (it.product_id) {
+        localProd = db.products.find(p => p.id === it.product_id);
+      }
+      if (!localProd && it.sku) {
+        localProd = db.products.find(p => (p.sku || '').toLowerCase() === (it.sku || '').toLowerCase());
+      }
+      if (!localProd && it.name) {
+        localProd = db.products.find(p => (p.name || '').toLowerCase() === (it.name || '').toLowerCase());
+      }
+
+      let oldStock = localProd ? (Number(localProd.stock_quantity) || 0) : 0;
+      let newStock = Math.max(0, Math.round((oldStock - itemQty) * 100) / 100);
+      const prodName = localProd ? localProd.name : (it.name || sample.product_name || 'Sản phẩm mẫu');
+
+      if (localProd) {
+        localProd.stock_quantity = newStock;
+      }
+
+      const txObj = {
+        id: 'it_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+        code: 'XK-PM-' + Math.floor(1000 + Math.random() * 9000),
+        type: 'StockOut',
+        product_id: localProd ? localProd.id : (it.product_id || null),
+        product_name: prodName,
+        quantity: itemQty,
+        previous_stock: oldStock,
+        new_stock: newStock,
+        reason: `Xuất cấp phát mẫu phiếu ${sample.code} (Cửa hàng: ${sample.customer_name}${sample.sales_person ? ' | Sales: ' + sample.sales_person : ''})`,
+        created_at: new Date().toISOString()
+      };
+      db.inventory_transactions.unshift(txObj);
+
+      // Supabase Live Mode Stock Out
+      if (this.isLiveMode) {
+        try {
+          let supaProd = null;
+          if (isValidUUID(it.product_id)) {
+            const { data: spData } = await this.supabase.from('products').select('*').eq('id', it.product_id).single();
+            if (spData) supaProd = spData;
+          } else if (localProd && isValidUUID(localProd.id)) {
+            const { data: spData } = await this.supabase.from('products').select('*').eq('id', localProd.id).single();
+            if (spData) supaProd = spData;
+          }
+          if (!supaProd && it.sku) {
+            const { data: spList } = await this.supabase.from('products').select('*').eq('sku', it.sku);
+            if (spList && spList.length > 0) supaProd = spList[0];
+          }
+          if (!supaProd && it.name) {
+            const { data: spList } = await this.supabase.from('products').select('*').eq('name', it.name);
+            if (spList && spList.length > 0) supaProd = spList[0];
+          }
+
+          let sOld = oldStock;
+          let sNew = newStock;
+          if (supaProd) {
+            sOld = Number(supaProd.stock_quantity) || 0;
+            sNew = Math.max(0, Math.round((sOld - itemQty) * 100) / 100);
+            await this.supabase.from('products').update({ stock_quantity: sNew }).eq('id', supaProd.id);
+          } else if (it.sku) {
+            await this.supabase.from('products').update({ stock_quantity: sNew }).eq('sku', it.sku);
+          }
+
+          const txPayload = prepareSupabasePayload({
+            code: txObj.code,
+            type: 'StockOut',
+            product_id: supaProd && isValidUUID(supaProd.id) ? supaProd.id : (isValidUUID(it.product_id) ? it.product_id : null),
+            product_name: supaProd ? supaProd.name : prodName,
+            quantity: itemQty,
+            previous_stock: sOld,
+            new_stock: sNew,
+            reason: txObj.reason,
+            created_at: txObj.created_at
+          });
+          await this.supabase.from('inventory_transactions').insert([txPayload]);
+        } catch (e) {
+          console.error('Supabase sample inventory deduction error:', e);
+        }
+      }
+    }
+
+    const existingIdx = db.product_samples.findIndex(s => s.id === createdSample.id);
+    if (existingIdx !== -1) {
+      db.product_samples[existingIdx] = createdSample;
+    } else {
+      db.product_samples.unshift(createdSample);
+    }
+    this.saveLocalStorageDb(db);
+    return createdSample;
+  }
+
+  async addSample(sample) {
+    return this.addProductSample(sample);
+  }
+
+  async updateProductSample(id, updates) {
+    updates.updated_at = new Date().toISOString();
+    const db = this.getLocalStorageDb();
+    if (!Array.isArray(db.product_samples)) db.product_samples = [];
+    if (!Array.isArray(db.products)) db.products = [];
+    if (!Array.isArray(db.inventory_transactions)) db.inventory_transactions = [];
+
+    const prevSample = db.product_samples.find(s => s.id === id);
+
+    // Status transition: If sample is returned -> restore stock (StockIn)
+    if (prevSample && prevSample.status !== 'Returned' && updates.status === 'Returned') {
+      const itemsToReturn = prevSample.items && prevSample.items.length > 0 ? prevSample.items : [{
+        product_id: prevSample.product_id,
+        sku: prevSample.product_sku,
+        name: prevSample.product_name,
+        quantity: prevSample.quantity
+      }];
+
+      for (const it of itemsToReturn) {
+        const itemQty = typeof parseQuantity === 'function' ? parseQuantity(it.quantity) : (parseFloat(it.quantity) || 0);
+        if (itemQty <= 0) continue;
+
+        let localProd = null;
+        if (it.product_id) localProd = db.products.find(p => p.id === it.product_id);
+        if (!localProd && it.sku) localProd = db.products.find(p => (p.sku || '').toLowerCase() === (it.sku || '').toLowerCase());
+        if (!localProd && it.name) localProd = db.products.find(p => (p.name || '').toLowerCase() === (it.name || '').toLowerCase());
+
+        let oldStock = localProd ? (Number(localProd.stock_quantity) || 0) : 0;
+        let newStock = Math.round((oldStock + itemQty) * 100) / 100;
+        const prodName = localProd ? localProd.name : (it.name || prevSample.product_name || 'Sản phẩm mẫu');
+
+        if (localProd) localProd.stock_quantity = newStock;
+
+        const txObj = {
+          id: 'it_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+          code: 'NK-PM-' + Math.floor(1000 + Math.random() * 9000),
+          type: 'StockIn',
+          product_id: localProd ? localProd.id : (it.product_id || null),
+          product_name: prodName,
+          quantity: itemQty,
+          previous_stock: oldStock,
+          new_stock: newStock,
+          reason: `Thu hồi mẫu phiếu ${prevSample.code} từ cửa hàng "${prevSample.customer_name}" về lại kho`,
+          created_at: new Date().toISOString()
+        };
+        db.inventory_transactions.unshift(txObj);
+
+        if (this.isLiveMode) {
+          try {
+            let supaProd = null;
+            if (isValidUUID(it.product_id)) {
+              const { data: spData } = await this.supabase.from('products').select('*').eq('id', it.product_id).single();
+              if (spData) supaProd = spData;
+            } else if (localProd && isValidUUID(localProd.id)) {
+              const { data: spData } = await this.supabase.from('products').select('*').eq('id', localProd.id).single();
+              if (spData) supaProd = spData;
+            }
+            if (!supaProd && it.sku) {
+              const { data: spList } = await this.supabase.from('products').select('*').eq('sku', it.sku);
+              if (spList && spList.length > 0) supaProd = spList[0];
+            }
+
+            let sOld = oldStock;
+            let sNew = newStock;
+            if (supaProd) {
+              sOld = Number(supaProd.stock_quantity) || 0;
+              sNew = Math.round((sOld + itemQty) * 100) / 100;
+              await this.supabase.from('products').update({ stock_quantity: sNew }).eq('id', supaProd.id);
+            }
+
+            const txPayload = prepareSupabasePayload({
+              code: txObj.code,
+              type: 'StockIn',
+              product_id: supaProd && isValidUUID(supaProd.id) ? supaProd.id : (isValidUUID(it.product_id) ? it.product_id : null),
+              product_name: supaProd ? supaProd.name : prodName,
+              quantity: itemQty,
+              previous_stock: sOld,
+              new_stock: sNew,
+              reason: txObj.reason,
+              created_at: txObj.created_at
+            });
+            await this.supabase.from('inventory_transactions').insert([txPayload]);
+          } catch (e) {
+            console.error('Supabase return sample inventory error:', e);
+          }
+        }
+      }
+    } else if (prevSample && prevSample.status === 'Returned' && updates.status && updates.status !== 'Returned') {
+      // Re-issued from returned status -> deduct stock again (StockOut)
+      const itemsToDeduct = prevSample.items && prevSample.items.length > 0 ? prevSample.items : [{
+        product_id: prevSample.product_id,
+        sku: prevSample.product_sku,
+        name: prevSample.product_name,
+        quantity: prevSample.quantity
+      }];
+
+      for (const it of itemsToDeduct) {
+        const itemQty = typeof parseQuantity === 'function' ? parseQuantity(it.quantity) : (parseFloat(it.quantity) || 0);
+        if (itemQty <= 0) continue;
+
+        let localProd = null;
+        if (it.product_id) localProd = db.products.find(p => p.id === it.product_id);
+        if (!localProd && it.sku) localProd = db.products.find(p => (p.sku || '').toLowerCase() === (it.sku || '').toLowerCase());
+        if (!localProd && it.name) localProd = db.products.find(p => (p.name || '').toLowerCase() === (it.name || '').toLowerCase());
+
+        let oldStock = localProd ? (Number(localProd.stock_quantity) || 0) : 0;
+        let newStock = Math.max(0, Math.round((oldStock - itemQty) * 100) / 100);
+        const prodName = localProd ? localProd.name : (it.name || prevSample.product_name || 'Sản phẩm mẫu');
+
+        if (localProd) localProd.stock_quantity = newStock;
+
+        const txObj = {
+          id: 'it_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+          code: 'XK-PM-' + Math.floor(1000 + Math.random() * 9000),
+          type: 'StockOut',
+          product_id: localProd ? localProd.id : (it.product_id || null),
+          product_name: prodName,
+          quantity: itemQty,
+          previous_stock: oldStock,
+          new_stock: newStock,
+          reason: `Xuất lại mẫu phiếu ${prevSample.code} cho cửa hàng "${prevSample.customer_name}"`,
+          created_at: new Date().toISOString()
+        };
+        db.inventory_transactions.unshift(txObj);
+
+        if (this.isLiveMode) {
+          try {
+            let supaProd = null;
+            if (isValidUUID(it.product_id)) {
+              const { data: spData } = await this.supabase.from('products').select('*').eq('id', it.product_id).single();
+              if (spData) supaProd = spData;
+            } else if (localProd && isValidUUID(localProd.id)) {
+              const { data: spData } = await this.supabase.from('products').select('*').eq('id', localProd.id).single();
+              if (spData) supaProd = spData;
+            }
+            if (!supaProd && it.sku) {
+              const { data: spList } = await this.supabase.from('products').select('*').eq('sku', it.sku);
+              if (spList && spList.length > 0) supaProd = spList[0];
+            }
+
+            let sOld = oldStock;
+            let sNew = newStock;
+            if (supaProd) {
+              sOld = Number(supaProd.stock_quantity) || 0;
+              sNew = Math.max(0, Math.round((sOld - itemQty) * 100) / 100);
+              await this.supabase.from('products').update({ stock_quantity: sNew }).eq('id', supaProd.id);
+            }
+
+            const txPayload = prepareSupabasePayload({
+              code: txObj.code,
+              type: 'StockOut',
+              product_id: supaProd && isValidUUID(supaProd.id) ? supaProd.id : (isValidUUID(it.product_id) ? it.product_id : null),
+              product_name: supaProd ? supaProd.name : prodName,
+              quantity: itemQty,
+              previous_stock: sOld,
+              new_stock: sNew,
+              reason: txObj.reason,
+              created_at: txObj.created_at
+            });
+            await this.supabase.from('inventory_transactions').insert([txPayload]);
+          } catch (e) {
+            console.error('Supabase re-issue sample inventory error:', e);
+          }
+        }
+      }
+    }
+
+    if (this.isLiveMode) {
+      try {
+        const payload = prepareSupabasePayload(updates);
+        const { error } = await this.supabase.from('product_samples').update(payload).eq('id', id);
+        if (error) {
+          console.error('Supabase updateProductSample error:', error);
+        }
+      } catch (e) {
+        console.error('Supabase updateProductSample exception:', e);
+      }
+    }
+
+    const idx = db.product_samples.findIndex(s => s.id === id);
+    if (idx !== -1) {
+      db.product_samples[idx] = { ...db.product_samples[idx], ...updates };
+      this.saveLocalStorageDb(db);
+      return db.product_samples[idx];
+    }
+    return null;
+  }
+
+  async updateSample(id, updates) {
+    return this.updateProductSample(id, updates);
+  }
+
+  async deleteProductSample(id) {
+    const db = this.getLocalStorageDb();
+    if (!Array.isArray(db.product_samples)) db.product_samples = [];
+    if (!Array.isArray(db.products)) db.products = [];
+    if (!Array.isArray(db.inventory_transactions)) db.inventory_transactions = [];
+
+    const sample = db.product_samples.find(s => s.id === id);
+
+    // If deleting an active sample (not Returned), restore inventory stock (StockIn)
+    if (sample && sample.status !== 'Returned') {
+      const itemsToRestore = sample.items && sample.items.length > 0 ? sample.items : [{
+        product_id: sample.product_id,
+        sku: sample.product_sku,
+        name: sample.product_name,
+        quantity: sample.quantity
+      }];
+
+      for (const it of itemsToRestore) {
+        const itemQty = typeof parseQuantity === 'function' ? parseQuantity(it.quantity) : (parseFloat(it.quantity) || 0);
+        if (itemQty <= 0) continue;
+
+        let localProd = null;
+        if (it.product_id) localProd = db.products.find(p => p.id === it.product_id);
+        if (!localProd && it.sku) localProd = db.products.find(p => (p.sku || '').toLowerCase() === (it.sku || '').toLowerCase());
+        if (!localProd && it.name) localProd = db.products.find(p => (p.name || '').toLowerCase() === (it.name || '').toLowerCase());
+
+        let oldStock = localProd ? (Number(localProd.stock_quantity) || 0) : 0;
+        let newStock = Math.round((oldStock + itemQty) * 100) / 100;
+        const prodName = localProd ? localProd.name : (it.name || sample.product_name || 'Sản phẩm mẫu');
+
+        if (localProd) localProd.stock_quantity = newStock;
+
+        const txObj = {
+          id: 'it_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+          code: 'NK-PM-' + Math.floor(1000 + Math.random() * 9000),
+          type: 'StockIn',
+          product_id: localProd ? localProd.id : (it.product_id || null),
+          product_name: prodName,
+          quantity: itemQty,
+          previous_stock: oldStock,
+          new_stock: newStock,
+          reason: `Hoàn tồn kho do xóa phiếu phát mẫu ${sample.code} (${sample.customer_name})`,
+          created_at: new Date().toISOString()
+        };
+        db.inventory_transactions.unshift(txObj);
+
+        if (this.isLiveMode) {
+          try {
+            let supaProd = null;
+            if (isValidUUID(it.product_id)) {
+              const { data: spData } = await this.supabase.from('products').select('*').eq('id', it.product_id).single();
+              if (spData) supaProd = spData;
+            } else if (localProd && isValidUUID(localProd.id)) {
+              const { data: spData } = await this.supabase.from('products').select('*').eq('id', localProd.id).single();
+              if (spData) supaProd = spData;
+            }
+            if (!supaProd && it.sku) {
+              const { data: spList } = await this.supabase.from('products').select('*').eq('sku', it.sku);
+              if (spList && spList.length > 0) supaProd = spList[0];
+            }
+
+            let sOld = oldStock;
+            let sNew = newStock;
+            if (supaProd) {
+              sOld = Number(supaProd.stock_quantity) || 0;
+              sNew = Math.round((sOld + itemQty) * 100) / 100;
+              await this.supabase.from('products').update({ stock_quantity: sNew }).eq('id', supaProd.id);
+            }
+
+            const txPayload = prepareSupabasePayload({
+              code: txObj.code,
+              type: 'StockIn',
+              product_id: supaProd && isValidUUID(supaProd.id) ? supaProd.id : (isValidUUID(it.product_id) ? it.product_id : null),
+              product_name: supaProd ? supaProd.name : prodName,
+              quantity: itemQty,
+              previous_stock: sOld,
+              new_stock: sNew,
+              reason: txObj.reason,
+              created_at: txObj.created_at
+            });
+            await this.supabase.from('inventory_transactions').insert([txPayload]);
+          } catch (e) {
+            console.error('Supabase restore stock on sample delete error:', e);
+          }
+        }
+      }
+    }
+
+    if (this.isLiveMode) {
+      try {
+        const { error } = await this.supabase.from('product_samples').delete().eq('id', id);
+        if (error) {
+          console.error('Supabase deleteProductSample error:', error);
+        }
+      } catch (e) {
+        console.error('Supabase deleteProductSample exception:', e);
+      }
+    }
+
+    if (Array.isArray(db.product_samples)) {
+      db.product_samples = db.product_samples.filter(s => s.id !== id);
+      this.saveLocalStorageDb(db);
+    }
+  }
+
+  async deleteSample(id) {
+    return this.deleteProductSample(id);
   }
 }
 

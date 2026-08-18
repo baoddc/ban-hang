@@ -64,6 +64,28 @@ function parseFormattedNumber(val) {
   return isNaN(num) ? 0 : num;
 }
 
+// Parse decimal quantity string (handles both dot "1.5" and comma "1,5" or "1.000,5")
+function parseQuantity(val) {
+  if (val === null || val === undefined || val === '') return 0;
+  if (typeof val === 'number') return isNaN(val) ? 0 : val;
+  let str = String(val).trim();
+  if (str.includes(',') && !str.includes('.')) {
+    str = str.replace(',', '.');
+  } else if (str.includes('.') && str.includes(',')) {
+    str = str.replace(/\./g, '').replace(',', '.');
+  }
+  const num = parseFloat(str);
+  return isNaN(num) ? 0 : num;
+}
+
+// Format decimal quantity cleanly (e.g. 1 -> "1", 1.5 -> "1.5", 2.25 -> "2.25")
+function formatQuantity(qty) {
+  if (qty === undefined || qty === null || qty === '' || isNaN(qty)) return '0';
+  const num = Number(qty);
+  if (isNaN(num)) return '0';
+  return num % 1 === 0 ? num.toString() : num.toFixed(2).replace(/\.?0+$/, '');
+}
+
 // Attach live thousand-separator dot formatting to an input element
 function formatInputWithDots(inputEl) {
   if (!inputEl || inputEl._hasDotFormatterAttached) return;

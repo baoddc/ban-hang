@@ -89,8 +89,8 @@ CREATE TABLE IF NOT EXISTS public.products (
     unit VARCHAR(50) DEFAULT 'Cái',
     cost_price NUMERIC(15, 2) DEFAULT 0, -- Giá vốn nhập kho
     selling_price NUMERIC(15, 2) DEFAULT 0, -- Giá bán niêm yết
-    stock_quantity INT DEFAULT 0, -- Số lượng tồn kho hiện tại
-    min_stock_alert INT DEFAULT 5, -- Ngưỡng cảnh báo tồn kho tối thiểu
+    stock_quantity NUMERIC(15, 2) DEFAULT 0, -- Số lượng tồn kho hiện tại (hỗ trợ số thập phân)
+    min_stock_alert NUMERIC(15, 2) DEFAULT 5, -- Ngưỡng cảnh báo tồn kho tối thiểu
     location VARCHAR(100),
     image_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS public.order_items (
     product_id UUID REFERENCES public.products(id) ON DELETE SET NULL,
     product_name VARCHAR(255) NOT NULL,
     unit_price NUMERIC(15, 2) NOT NULL,
-    quantity INT NOT NULL,
+    quantity NUMERIC(15, 2) NOT NULL,
     subtotal NUMERIC(15, 2) NOT NULL
 );
 
@@ -163,9 +163,9 @@ CREATE TABLE IF NOT EXISTS public.inventory_transactions (
     type VARCHAR(50) NOT NULL, -- 'StockIn' (Nhập kho), 'StockOut' (Xuất kho), 'Transfer' (Điều chuyển)
     product_id UUID REFERENCES public.products(id) ON DELETE CASCADE,
     product_name VARCHAR(255) NOT NULL,
-    quantity INT NOT NULL,
-    previous_stock INT NOT NULL,
-    new_stock INT NOT NULL,
+    quantity NUMERIC(15, 2) NOT NULL,
+    previous_stock NUMERIC(15, 2) NOT NULL,
+    new_stock NUMERIC(15, 2) NOT NULL,
     reason TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
@@ -237,6 +237,52 @@ CREATE TABLE IF NOT EXISTS public.shipping_rules (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
+-- 13. BẢNG QUẢN LÝ PHÁT MẪU SẢN PHẨM CHO CỬA HÀNG & ĐẠI LÝ (PRODUCT SAMPLES)
+CREATE TABLE IF NOT EXISTS public.product_samples (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code VARCHAR(50) UNIQUE NOT NULL, -- Mã phiếu phát mẫu (VD: PM-202608-001)
+    customer_id UUID REFERENCES public.customers(id) ON DELETE SET NULL, -- ID cửa hàng nhận mẫu
+    customer_name VARCHAR(255) NOT NULL, -- Tên cửa hàng / Đại lý nhận mẫu
+    customer_phone VARCHAR(50), -- SĐT liên hệ của cửa hàng
+    customer_address TEXT, -- Địa chỉ cửa hàng
+    route VARCHAR(100), -- Tuyến công tác / Khu vực
+    sales_person VARCHAR(100), -- Nhân viên tư vấn / Sales phụ trách giao mẫu
+    product_id UUID REFERENCES public.products(id) ON DELETE SET NULL, -- Sản phẩm mẫu
+    product_sku VARCHAR(50), -- Mã SKU sản phẩm
+    product_name VARCHAR(255) NOT NULL, -- Tên sản phẩm mẫu
+    category VARCHAR(100), -- Phân loại sản phẩm mẫu
+    quantity NUMERIC(15, 2) DEFAULT 1, -- Số lượng mẫu đã giao (hỗ trợ số thập phân)
+    unit VARCHAR(50) DEFAULT 'Mẫu', -- Đơn vị tính (Mẫu, Tấm, Bộ, Cuốn...)
+    handover_date DATE DEFAULT CURRENT_DATE, -- Ngày bàn giao mẫu
+    status VARCHAR(50) DEFAULT 'Displaying', -- 'Displaying' (Đang trưng bày), 'Converted' (Đã chốt đơn), 'Returned' (Đã thu hồi), 'Damaged' (Hư hỏng/Mất), 'Pending' (Chờ giao)
+    feedback TEXT, -- Đánh giá / Phản hồi của cửa hàng về mẫu
+    notes TEXT, -- Ghi chú chi tiết
+    items JSONB DEFAULT '[]'::jsonb, -- Danh sách chi tiết nhiều sản phẩm mẫu kèm theo trong 1 phiếu
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+-- Migration nếu bảng product_samples đã tồn tại
+ALTER TABLE IF EXISTS public.product_samples ADD COLUMN IF NOT EXISTS customer_phone VARCHAR(50);
+ALTER TABLE IF EXISTS public.product_samples ADD COLUMN IF NOT EXISTS customer_address TEXT;
+ALTER TABLE IF EXISTS public.product_samples ADD COLUMN IF NOT EXISTS route VARCHAR(100);
+ALTER TABLE IF EXISTS public.product_samples ADD COLUMN IF NOT EXISTS sales_person VARCHAR(100);
+ALTER TABLE IF EXISTS public.product_samples ADD COLUMN IF NOT EXISTS product_sku VARCHAR(50);
+ALTER TABLE IF EXISTS public.product_samples ADD COLUMN IF NOT EXISTS category VARCHAR(100);
+ALTER TABLE IF EXISTS public.product_samples ADD COLUMN IF NOT EXISTS unit VARCHAR(50) DEFAULT 'Mẫu';
+ALTER TABLE IF EXISTS public.product_samples ADD COLUMN IF NOT EXISTS feedback TEXT;
+ALTER TABLE IF EXISTS public.product_samples ADD COLUMN IF NOT EXISTS items JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE IF EXISTS public.product_samples ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now());
+
+-- Migration hỗ trợ số lượng thập phân (Decimal Quantities Migration)
+ALTER TABLE IF EXISTS public.products ALTER COLUMN stock_quantity TYPE NUMERIC(15, 2) USING stock_quantity::NUMERIC(15, 2);
+ALTER TABLE IF EXISTS public.products ALTER COLUMN min_stock_alert TYPE NUMERIC(15, 2) USING min_stock_alert::NUMERIC(15, 2);
+ALTER TABLE IF EXISTS public.product_samples ALTER COLUMN quantity TYPE NUMERIC(15, 2) USING quantity::NUMERIC(15, 2);
+ALTER TABLE IF EXISTS public.inventory_transactions ALTER COLUMN quantity TYPE NUMERIC(15, 2) USING quantity::NUMERIC(15, 2);
+ALTER TABLE IF EXISTS public.inventory_transactions ALTER COLUMN previous_stock TYPE NUMERIC(15, 2) USING previous_stock::NUMERIC(15, 2);
+ALTER TABLE IF EXISTS public.inventory_transactions ALTER COLUMN new_stock TYPE NUMERIC(15, 2) USING new_stock::NUMERIC(15, 2);
+ALTER TABLE IF EXISTS public.order_items ALTER COLUMN quantity TYPE NUMERIC(15, 2) USING quantity::NUMERIC(15, 2);
+
 -- ==============================================================================
 -- PHẦN 3: ĐÁNH CHỈ MỤC INDEXES (TỐI ƯU HÓA TỐC ĐỘ TRUY VẤN CSDL)
 -- ==============================================================================
@@ -291,6 +337,15 @@ CREATE INDEX IF NOT EXISTS idx_shipping_rules_category ON public.shipping_rules(
 CREATE INDEX IF NOT EXISTS idx_shipping_rules_distance ON public.shipping_rules(min_distance, max_distance);
 CREATE INDEX IF NOT EXISTS idx_shipping_rules_active ON public.shipping_rules(is_active);
 
+CREATE INDEX IF NOT EXISTS idx_product_samples_code ON public.product_samples(code);
+CREATE INDEX IF NOT EXISTS idx_product_samples_customer ON public.product_samples(customer_id);
+CREATE INDEX IF NOT EXISTS idx_product_samples_product ON public.product_samples(product_id);
+CREATE INDEX IF NOT EXISTS idx_product_samples_product_sku ON public.product_samples(product_sku);
+CREATE INDEX IF NOT EXISTS idx_product_samples_status ON public.product_samples(status);
+CREATE INDEX IF NOT EXISTS idx_product_samples_sales ON public.product_samples(sales_person);
+CREATE INDEX IF NOT EXISTS idx_product_samples_route ON public.product_samples(route);
+CREATE INDEX IF NOT EXISTS idx_product_samples_handover_date ON public.product_samples(handover_date);
+
 -- ==============================================================================
 -- PHẦN 4: HÀM TIỆN ÍCH HỖ TRỢ XÓA / RESET DỮ LIỆU CÔNG NỢ (UTILITY FUNCTIONS)
 -- ==============================================================================
@@ -322,6 +377,7 @@ ALTER TABLE public.leads DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.returns DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inbound_orders DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.shipping_rules DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_samples DISABLE ROW LEVEL SECURITY;
 
 -- Chính sách công khai dự phòng (Public Access Policies) nếu RLS được bật lại trong tương lai
 DROP POLICY IF EXISTS "Allow public access on customers" ON public.customers;
@@ -359,6 +415,9 @@ CREATE POLICY "Allow public access on inbound_orders" ON public.inbound_orders F
 
 DROP POLICY IF EXISTS "Allow public access on shipping_rules" ON public.shipping_rules;
 CREATE POLICY "Allow public access on shipping_rules" ON public.shipping_rules FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public access on product_samples" ON public.product_samples;
+CREATE POLICY "Allow public access on product_samples" ON public.product_samples FOR ALL USING (true) WITH CHECK (true);
 
 -- Cấp quyền truy cập trực tiếp cho các Role mặc định của Supabase
 GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, postgres, service_role;

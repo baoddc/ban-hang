@@ -157,7 +157,7 @@ function renderInventoryTable(products) {
         </td>
         <td>${formatVND(p.cost_price)}</td>
         <td style="font-weight:700; color:var(--primary);">${formatVND(p.selling_price)}</td>
-        <td class="stock-tag ${isLow ? 'low' : 'ok'}">${p.stock_quantity} ${p.unit}</td>
+        <td class="stock-tag ${isLow ? 'low' : 'ok'}">${typeof formatQuantity === 'function' ? formatQuantity(p.stock_quantity) : p.stock_quantity} ${p.unit}</td>
         <td>
           ${isLow ? `
             <span class="badge badge-danger"><i class="bi bi-exclamation-circle"></i> Sắp Hết</span>
@@ -191,6 +191,9 @@ function renderLedgerTable(transactions) {
 
   tbody.innerHTML = transactions.map(tx => {
     const isStockIn = tx.type === 'StockIn';
+    const formattedQty = typeof formatQuantity === 'function' ? formatQuantity(tx.quantity) : tx.quantity;
+    const formattedPrev = typeof formatQuantity === 'function' ? formatQuantity(tx.previous_stock) : tx.previous_stock;
+    const formattedNew = typeof formatQuantity === 'function' ? formatQuantity(tx.new_stock) : tx.new_stock;
     return `
       <tr>
         <td><code>${tx.code}</code></td>
@@ -201,10 +204,10 @@ function renderLedgerTable(transactions) {
         </td>
         <td><strong>${tx.product_name}</strong></td>
         <td style="font-weight:800; color:${isStockIn ? 'var(--success)' : 'var(--danger)'};">
-          ${isStockIn ? '+' : '-'}${tx.quantity}
+          ${isStockIn ? '+' : '-'}${formattedQty}
         </td>
-        <td>${tx.previous_stock}</td>
-        <td><strong>${tx.new_stock}</strong></td>
+        <td>${formattedPrev}</td>
+        <td><strong>${formattedNew}</strong></td>
         <td>${tx.reason || 'N/A'}</td>
         <td>${formatDate(tx.created_at)}</td>
       </tr>
@@ -216,9 +219,12 @@ function populateTxProductSelect() {
   const select = document.getElementById('tx-product-select');
   if (!select) return;
 
-  select.innerHTML = allProductsList.map(p => `
-    <option value="${p.id}">${p.sku} - ${p.name} (Tồn: ${p.stock_quantity})</option>
-  `).join('');
+  select.innerHTML = allProductsList.map(p => {
+    const formattedStock = typeof formatQuantity === 'function' ? formatQuantity(p.stock_quantity) : p.stock_quantity;
+    return `
+    <option value="${p.id}">${p.sku} - ${p.name} (Tồn: ${formattedStock})</option>
+  `;
+  }).join('');
 }
 
 function checkProductSkuAvailability() {
@@ -416,7 +422,7 @@ function quickAdjustStock(productId) {
 async function submitStockTransaction() {
   const productId = document.getElementById('tx-product-select').value;
   const type = document.getElementById('tx-type-select').value;
-  const qty = parseFormattedNumber(document.getElementById('tx-qty-input').value) || 1;
+  const qty = typeof parseQuantity === 'function' ? parseQuantity(document.getElementById('tx-qty-input').value) : (parseFloat(document.getElementById('tx-qty-input').value) || 1);
   const reason = document.getElementById('tx-reason-input').value.trim();
 
   if (qty <= 0) {
@@ -695,7 +701,7 @@ async function openCreateInboundModal() {
 
   const creatorInput = document.getElementById('inb-creator-name');
   if (creatorInput && (!creatorInput.value || creatorInput.value === '[Tên bạn]')) {
-    creatorInput.value = 'Lê Thái Bão';
+    creatorInput.value = 'Nguyễn Văn A';
   }
 
   // Set default expected date = today + 3 days
@@ -934,7 +940,7 @@ function openFulfillInboundModal(inboundId) {
   if (fulWhText) fulWhText.textContent = inbound.warehouse || 'Kho HG';
 
   const fulCreator = document.getElementById('ful-creator');
-  if (fulCreator) fulCreator.textContent = inbound.created_by || 'Lê Thái Bão';
+  if (fulCreator) fulCreator.textContent = inbound.created_by || 'Nguyễn Văn A';
 
   const tbody = document.getElementById('fulfill-items-tbody');
 
