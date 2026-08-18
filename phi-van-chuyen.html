@@ -99,15 +99,18 @@
           </button>
           <div class="page-title-group">
             <h1>Quản Lý & Xác Định Phí Vận Chuyển</h1>
-            <p>Xác định cước giao hàng dựa vào Mã SKU sản phẩm (từ Kho Hàng) & Khoảng cách từ công ty đến cửa hàng (Supabase DB)</p>
+            <p>Xác định cước giao hàng dựa vào Mã SKU sản phẩm (từ Kho Hàng) & Khoảng cách từ công ty đến cửa hàng
+              (Supabase DB)</p>
           </div>
         </div>
 
         <div class="header-actions" style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <button class="btn btn-secondary" onclick="clearAllShippingRulesAction()" style="color:#ef4444;" title="Xóa toàn bộ các quy tắc cước">
+          <button class="btn btn-secondary" onclick="clearAllShippingRulesAction()" style="color:#ef4444;"
+            title="Xóa toàn bộ các quy tắc cước">
             <i class="bi bi-trash"></i> <span>Xóa Toàn Bộ Quy Tắc</span>
           </button>
-          <button class="btn btn-secondary" onclick="resetShippingRulesPresets()" title="Tự động tạo biểu cước mẫu dựa theo các SKU đang có trong kho">
+          <button class="btn btn-secondary" onclick="resetShippingRulesPresets()"
+            title="Tự động tạo biểu cước mẫu dựa theo các SKU đang có trong kho">
             <i class="bi bi-arrow-clockwise text-warning"></i> <span>Khôi Phục Theo SKU Kho</span>
           </button>
           <button class="btn btn-primary" onclick="openCreateRuleModal()">
@@ -187,25 +190,26 @@
                 </label>
                 <div class="search-select-wrapper">
                   <i class="bi bi-search search-select-icon"></i>
-                  <input type="text" 
-                         id="calc-customer-search-input" 
-                         class="form-control search-select-input" 
-                         placeholder="Tìm theo tên đại lý, cửa hàng, mã KH, SĐT, tuyến đường..." 
-                         onfocus="showCalculatorCustomerDropdown()" 
-                         oninput="filterCalculatorCustomerDropdown()" 
-                         autocomplete="off" />
-                  <button type="button" class="btn-clear-select" id="btn-clear-calc-customer" onclick="clearCalculatorCustomerSearch()" style="display:none;" title="Xóa tìm kiếm">&times;</button>
+                  <input type="text" id="calc-customer-search-input" class="form-control search-select-input"
+                    placeholder="Tìm theo tên đại lý, cửa hàng, mã KH, SĐT, tuyến đường..."
+                    onfocus="showCalculatorCustomerDropdown()" oninput="filterCalculatorCustomerDropdown()"
+                    autocomplete="off" />
+                  <button type="button" class="btn-clear-select" id="btn-clear-calc-customer"
+                    onclick="clearCalculatorCustomerSearch()" style="display:none;"
+                    title="Xóa tìm kiếm">&times;</button>
                   <div class="search-dropdown-menu" id="calc-customer-dropdown-list" style="display:none;">
                     <!-- Customer items dynamically populated -->
                   </div>
                 </div>
-                <select id="calc-customer-select" class="form-control" style="display:none;" onchange="onCalculatorCustomerChange()">
+                <select id="calc-customer-select" class="form-control" style="display:none;"
+                  onchange="onCalculatorCustomerChange()">
                   <!-- Dynamically populated for backward compatibility -->
                 </select>
               </div>
 
               <!-- Customer Info Preview Box -->
-              <div id="calc-customer-info-box" style="display:none; background:var(--bg-subtle); border:1px dashed var(--border-color); border-radius:var(--radius-md); padding:10px 14px; font-size:0.82rem;">
+              <div id="calc-customer-info-box"
+                style="display:none; background:var(--bg-subtle); border:1px dashed var(--border-color); border-radius:var(--radius-md); padding:10px 14px; font-size:0.82rem;">
                 <div style="font-weight:700; color:var(--primary); margin-bottom:4px;" id="calc-cust-name">-</div>
                 <div style="display:flex; flex-wrap:wrap; gap:12px; color:var(--text-muted);">
                   <span><i class="bi bi-telephone"></i> <strong id="calc-cust-phone">-</strong></span>
@@ -220,7 +224,8 @@
                   <label class="form-label" style="font-size:0.85rem; font-weight:700; margin:0;">
                     <i class="bi bi-upc-scan text-primary"></i> Mã SKU Sản Phẩm & Số Lượng:
                   </label>
-                  <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.78rem;" onclick="addCalcItemRow()">
+                  <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.78rem;"
+                    onclick="addCalcItemRow()">
                     <i class="bi bi-plus-lg text-primary"></i> Thêm SKU
                   </button>
                 </div>
@@ -237,20 +242,29 @@
                     <i class="bi bi-signpost-split-fill text-primary"></i> Khoảng Cách Từ Công Ty Đến Cửa Hàng:
                   </span>
                   <div style="display:flex; align-items:center; gap:6px;">
-                    <input type="number" step="0.5" min="0" max="200" id="calc-distance-input" class="form-control" value="5" style="width:75px; text-align:right; font-weight:800; font-size:1.1rem; color:var(--primary); padding:4px 8px;" />
+                    <input type="number" step="0.5" min="0" max="200" id="calc-distance-input" class="form-control"
+                      value="5"
+                      style="width:75px; text-align:right; font-weight:800; font-size:1.1rem; color:var(--primary); padding:4px 8px;" />
                     <span style="font-weight:800; color:var(--primary);">km</span>
                   </div>
                 </div>
 
-                <input type="range" min="0" max="150" step="0.5" value="10" class="distance-range-slider" id="calc-distance-slider" />
+                <input type="range" min="0" max="150" step="0.5" value="10" class="distance-range-slider"
+                  id="calc-distance-slider" />
 
                 <div class="distance-bracket-pills">
-                  <span style="font-size:0.75rem; color:var(--text-subtle); display:flex; align-items:center;">Chọn nhanh:</span>
-                  <button type="button" class="distance-pill-btn active" data-km="10" onclick="setCalculatorDistance(10)">≤ 15 km</button>
-                  <button type="button" class="distance-pill-btn" data-km="25" onclick="setCalculatorDistance(25)">Từ 16 đến ≤ 30 km</button>
-                  <button type="button" class="distance-pill-btn" data-km="45" onclick="setCalculatorDistance(45)">Từ 31 đến ≤ 60 km</button>
-                  <button type="button" class="distance-pill-btn" data-km="75" onclick="setCalculatorDistance(75)">Từ 61 đến ≤ 90 km</button>
-                  <button type="button" class="distance-pill-btn" data-km="120" onclick="setCalculatorDistance(120)">> 90 km</button>
+                  <span style="font-size:0.75rem; color:var(--text-subtle); display:flex; align-items:center;">Chọn
+                    nhanh:</span>
+                  <button type="button" class="distance-pill-btn active" data-km="10"
+                    onclick="setCalculatorDistance(10)">≤ 15 km</button>
+                  <button type="button" class="distance-pill-btn" data-km="25" onclick="setCalculatorDistance(25)">Từ 16
+                    đến ≤ 30 km</button>
+                  <button type="button" class="distance-pill-btn" data-km="45" onclick="setCalculatorDistance(45)">Từ 31
+                    đến ≤ 60 km</button>
+                  <button type="button" class="distance-pill-btn" data-km="75" onclick="setCalculatorDistance(75)">Từ 61
+                    đến ≤ 90 km</button>
+                  <button type="button" class="distance-pill-btn" data-km="120" onclick="setCalculatorDistance(120)">>
+                    90 km</button>
                 </div>
               </div>
             </div>
@@ -258,7 +272,8 @@
             <!-- Right: Calculation Result & Breakdown -->
             <div class="fee-result-panel">
               <div>
-                <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#38bdf8;">
+                <div
+                  style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#38bdf8;">
                   KẾT QUẢ XÁC ĐỊNH CƯỚC PHÍ VẬN CHUYỂN
                 </div>
                 <div style="font-size:0.82rem; color:#94a3b8; margin-top:2px;">
@@ -279,7 +294,8 @@
 
               <!-- Breakdown list -->
               <div>
-                <div style="font-size:0.8rem; font-weight:700; color:#94a3b8; margin-bottom:8px; text-transform:uppercase;">
+                <div
+                  style="font-size:0.8rem; font-weight:700; color:#94a3b8; margin-bottom:8px; text-transform:uppercase;">
                   Phân Tích Chi Tiết Biểu Phí:
                 </div>
                 <div class="result-breakdown-list" id="calc-breakdown-list">
@@ -288,15 +304,22 @@
               </div>
 
               <!-- Actions -->
-              <div style="display:flex; flex-direction:column; gap:10px; margin-top:auto; padding-top:14px; border-top:1px solid rgba(255,255,255,0.1);">
-                <button class="btn btn-primary" style="width:100%; justify-content:center; padding:12px; font-weight:700; font-size:0.95rem;" onclick="applyToPosTerminal()">
+              <div
+                style="display:flex; flex-direction:column; gap:10px; margin-top:auto; padding-top:14px; border-top:1px solid rgba(255,255,255,0.1);">
+                <button class="btn btn-primary"
+                  style="width:100%; justify-content:center; padding:12px; font-weight:700; font-size:0.95rem;"
+                  onclick="applyToPosTerminal()">
                   <i class="bi bi-cart-check-fill"></i> Mở Màn Hình Bán Hàng (POS)
                 </button>
                 <div style="display:flex; gap:10px;">
-                  <button class="btn btn-secondary" style="flex:1; justify-content:center; background:rgba(255,255,255,0.1); color:#ffffff; border-color:rgba(255,255,255,0.2);" onclick="copyQuotationText()">
+                  <button class="btn btn-secondary"
+                    style="flex:1; justify-content:center; background:rgba(255,255,255,0.1); color:#ffffff; border-color:rgba(255,255,255,0.2);"
+                    onclick="copyQuotationText()">
                     <i class="bi bi-clipboard"></i> Sao Chép Báo Giá
                   </button>
-                  <button class="btn btn-secondary" style="flex:1; justify-content:center; background:rgba(255,255,255,0.1); color:#ffffff; border-color:rgba(255,255,255,0.2);" onclick="window.print()">
+                  <button class="btn btn-secondary"
+                    style="flex:1; justify-content:center; background:rgba(255,255,255,0.1); color:#ffffff; border-color:rgba(255,255,255,0.2);"
+                    onclick="window.print()">
                     <i class="bi bi-printer"></i> In Phiếu Báo Giá
                   </button>
                 </div>
@@ -312,26 +335,34 @@
         <div id="view-shipping-rules" style="display:none;">
           <div class="card">
             <!-- 2-Way Synchronization Notice Banner -->
-            <div style="background: rgba(99, 102, 241, 0.08); border: 1px dashed var(--primary); border-radius: var(--radius-md); padding: 10px 14px; margin-bottom: 16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+            <div
+              style="background: rgba(99, 102, 241, 0.08); border: 1px dashed var(--primary); border-radius: var(--radius-md); padding: 10px 14px; margin-bottom: 16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
               <div style="display:flex; align-items:center; gap:8px; font-size:0.84rem; color:var(--text-main);">
                 <i class="bi bi-arrow-left-right text-primary" style="font-size:1.2rem;"></i>
-                <span><strong>Đồng bộ điều chỉnh 2 chiều:</strong> Nhập trực tiếp cước phí tại ô giá trên bảng, thay đổi sẽ đồng bộ ngay sang <strong>Ma Trận Bảng Giá 2 Chiều</strong> và áp dụng tự động cho Bán Hàng & POS.</span>
+                <span><strong>Đồng bộ điều chỉnh 2 chiều:</strong> Nhập trực tiếp cước phí tại ô giá trên bảng, thay đổi
+                  sẽ đồng bộ ngay sang <strong>Ma Trận Bảng Giá 2 Chiều</strong> và áp dụng tự động cho Bán Hàng &
+                  POS.</span>
               </div>
-              <button class="btn btn-sm btn-success" style="padding:5px 12px; font-size:0.8rem; font-weight:700;" onclick="saveAllShippingRules()">
+              <button class="btn btn-sm btn-success" style="padding:5px 12px; font-size:0.8rem; font-weight:700;"
+                onclick="saveAllShippingRules()">
                 <i class="bi bi-cloud-arrow-up-fill"></i> Lưu Biểu Cước Lên Supabase
               </button>
             </div>
 
-            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-              <div class="card-title"><i class="bi bi-sliders text-primary"></i> Bảng Danh Sách Quy Tắc & Định Mức Cước</div>
+            <div class="card-header"
+              style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+              <div class="card-title"><i class="bi bi-sliders text-primary"></i> Bảng Danh Sách Quy Tắc & Định Mức Cước
+              </div>
               <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                <select id="rules-filter-category" class="form-control" style="width:190px;" onchange="renderShippingRulesTable()">
+                <select id="rules-filter-category" class="form-control" style="width:190px;"
+                  onchange="renderShippingRulesTable()">
                   <option value="All">Tất cả SKU</option>
                 </select>
 
                 <div class="search-box" style="width:200px;">
                   <i class="bi bi-search"></i>
-                  <input type="text" id="rules-search-input" placeholder="Tìm SKU, ghi chú..." oninput="renderShippingRulesTable()" />
+                  <input type="text" id="rules-search-input" placeholder="Tìm SKU, ghi chú..."
+                    oninput="renderShippingRulesTable()" />
                 </div>
 
                 <button class="btn btn-primary" onclick="openCreateRuleModal()">
@@ -366,20 +397,26 @@
         <div id="view-shipping-matrix" style="display:none;">
           <div class="card">
             <!-- 2-Way Synchronization Notice Banner -->
-            <div style="background: rgba(99, 102, 241, 0.08); border: 1px dashed var(--primary); border-radius: var(--radius-md); padding: 10px 14px; margin-bottom: 16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+            <div
+              style="background: rgba(99, 102, 241, 0.08); border: 1px dashed var(--primary); border-radius: var(--radius-md); padding: 10px 14px; margin-bottom: 16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
               <div style="display:flex; align-items:center; gap:8px; font-size:0.84rem; color:var(--text-main);">
                 <i class="bi bi-arrow-left-right text-primary" style="font-size:1.2rem;"></i>
-                <span><strong>Đồng bộ điều chỉnh 2 chiều:</strong> Chỉnh sửa nhanh đơn giá (VNĐ/thùng) cho từng SKU theo 5 khung khoảng cách, dữ liệu lập tức cập nhật sang <strong>Bảng Quy Tắc</strong>.</span>
+                <span><strong>Đồng bộ điều chỉnh 2 chiều:</strong> Chỉnh sửa nhanh đơn giá (VNĐ/thùng) cho từng SKU theo
+                  5 khung khoảng cách, dữ liệu lập tức cập nhật sang <strong>Bảng Quy Tắc</strong>.</span>
               </div>
-              <button class="btn btn-sm btn-success" style="padding:5px 12px; font-size:0.8rem; font-weight:700;" onclick="saveAllShippingRules()">
+              <button class="btn btn-sm btn-success" style="padding:5px 12px; font-size:0.8rem; font-weight:700;"
+                onclick="saveAllShippingRules()">
                 <i class="bi bi-cloud-arrow-up-fill"></i> Lưu Biểu Cước Lên Supabase
               </button>
             </div>
 
-            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div class="card-header"
+              style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
               <div>
-                <div class="card-title"><i class="bi bi-grid-3x3 text-primary"></i> Ma Trận Bảng Giá Vận Chuyển 2 Chiều Theo SKU (VNĐ / thùng)</div>
-                <p style="font-size:0.8rem; color:var(--text-muted); margin:0;">Chỉnh sửa trực tiếp đơn giá vận chuyển (VNĐ/thùng) cho từng SKU theo khung khoảng cách và bấm Lưu lên Supabase</p>
+                <div class="card-title"><i class="bi bi-grid-3x3 text-primary"></i> Ma Trận Bảng Giá Vận Chuyển 2 Chiều
+                  Theo SKU (VNĐ / ĐVT)</div>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin:0;">Chỉnh sửa trực tiếp đơn giá vận chuyển
+                  (VNĐ/thùng) cho từng SKU theo khung khoảng cách và bấm Lưu lên Supabase</p>
               </div>
               <button class="btn btn-success" onclick="saveAllShippingRules()">
                 <i class="bi bi-check2-circle"></i> Lưu Toàn Bộ Ma Trận Lên Supabase
@@ -397,18 +434,23 @@
              ======================================================= -->
         <div id="view-shipping-stores" style="display:none;">
           <div class="card">
-            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div class="card-header"
+              style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
               <div>
-                <div class="card-title"><i class="bi bi-shop text-primary"></i> Quản Lý Khoảng Cách Cửa Hàng & Đại Lý</div>
-                <p style="font-size:0.8rem; color:var(--text-muted); margin:0;">Cập nhật khoảng cách giao hàng (km) từ trụ sở công ty đến từng khách hàng trên Supabase</p>
+                <div class="card-title"><i class="bi bi-shop text-primary"></i> Quản Lý Khoảng Cách Cửa Hàng & Đại Lý
+                </div>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin:0;">Cập nhật khoảng cách giao hàng (km) từ
+                  trụ sở công ty đến từng khách hàng trên Supabase</p>
               </div>
               <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                <select id="stores-filter-route" class="form-control" style="width:180px;" onchange="renderStoresDistanceTable()">
+                <select id="stores-filter-route" class="form-control" style="width:180px;"
+                  onchange="renderStoresDistanceTable()">
                   <option value="All">Tất cả tuyến đường</option>
                 </select>
                 <div class="search-box" style="width:220px;">
                   <i class="bi bi-search"></i>
-                  <input type="text" id="stores-search-input" placeholder="Tìm tên, mã, SĐT, đ/c..." oninput="renderStoresDistanceTable()" />
+                  <input type="text" id="stores-search-input" placeholder="Tìm tên, mã, SĐT, đ/c..."
+                    oninput="renderStoresDistanceTable()" />
                 </div>
               </div>
             </div>
@@ -444,7 +486,8 @@
   <div class="modal-overlay" id="rule-modal">
     <div class="modal-box" style="max-width: 540px;">
       <div class="modal-header">
-        <h3 class="modal-title" id="rule-modal-title"><i class="bi bi-plus-circle text-primary"></i> Thêm Quy Tắc Phí Vận Chuyển Theo SKU</h3>
+        <h3 class="modal-title" id="rule-modal-title"><i class="bi bi-plus-circle text-primary"></i> Thêm Quy Tắc Phí
+          Vận Chuyển Theo SKU</h3>
         <button class="btn btn-icon" onclick="closeModal('rule-modal')"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="modal-body">
@@ -467,9 +510,10 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Đơn Giá Cước Vận Chuyển (VNĐ / thùng) (*)</label>
+          <label class="form-label">Đơn Giá Cước Vận Chuyển (VNĐ / ĐVT) (*)</label>
           <input type="text" inputmode="numeric" id="rule-base-fee" class="form-control format-number" value="50.000" />
-          <div style="font-size:0.75rem; color:var(--text-subtle); margin-top:2px;">Mức cước tính trên mỗi thùng (hoặc đơn vị) sản phẩm khi giao hàng trong khung khoảng cách này</div>
+          <div style="font-size:0.75rem; color:var(--text-subtle); margin-top:2px;">Mức cước tính trên mỗi thùng (hoặc
+            đơn vị) sản phẩm khi giao hàng trong khung khoảng cách này</div>
         </div>
 
         <div class="form-group">
@@ -477,10 +521,12 @@
           <input type="text" id="rule-notes" class="form-control" placeholder="Ví dụ: Khoảng cách ≤ 15 km..." />
         </div>
 
-        <div class="form-group" style="display:flex; align-items:center; justify-content:space-between; background:var(--bg-subtle); padding:10px 14px; border-radius:var(--radius-sm);">
+        <div class="form-group"
+          style="display:flex; align-items:center; justify-content:space-between; background:var(--bg-subtle); padding:10px 14px; border-radius:var(--radius-sm);">
           <div>
             <label style="font-weight:700; font-size:0.85rem; display:block;">Kích Hoạt Quy Tắc Này</label>
-            <span style="font-size:0.75rem; color:var(--text-subtle);">Cho phép POS và bộ tính cước áp dụng tự động</span>
+            <span style="font-size:0.75rem; color:var(--text-subtle);">Cho phép POS và bộ tính cước áp dụng tự
+              động</span>
           </div>
           <label class="switch-toggle">
             <input type="checkbox" id="rule-active-toggle" checked />

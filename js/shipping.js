@@ -1103,7 +1103,7 @@ function renderPricingMatrix() {
                    value="${formatNumberWithDots(feeVal)}"
                    oninput="onMatrixCellInput(this)"
                    onchange="onMatrixCellChange(this)" />
-            <div class="matrix-subtext">VNĐ / thùng</div>
+            <div class="matrix-subtext">VNĐ / ĐVT</div>
           </div>
         </td>
       `;
