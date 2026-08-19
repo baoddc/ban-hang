@@ -182,8 +182,11 @@ function initSupabaseConfigModal() {
             <i class="bi bi-info-circle text-primary"></i> Bạn chưa chạy SQL Schema trên Supabase? Bạn có thể mở tệp <code>config/supabase-schema.sql</code> trong mã nguồn để tạo đầy đủ các bảng dữ liệu.
           </div>
         </div>
-        <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
-          <button class="btn btn-secondary" onclick="resetDemoStorage()" style="color:#ef4444;" title="Xóa sạch dữ liệu mẫu"><i class="bi bi-trash"></i> Xóa sạch dữ liệu Demo</button>
+        <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-secondary" onclick="loadSampleDataConfirm()" style="color:var(--primary);" title="Nạp bộ dữ liệu mẫu chuẩn (Khách hàng, Kho, Đơn hàng, Công nợ...)"><i class="bi bi-database-fill-add"></i> Nạp Dữ Liệu Mẫu</button>
+            <button class="btn btn-secondary" onclick="resetDemoStorage()" style="color:#ef4444;" title="Xóa sạch dữ liệu mẫu"><i class="bi bi-trash"></i> Xóa Demo</button>
+          </div>
           <div style="display:flex; gap:8px;">
             <button class="btn btn-secondary" onclick="closeModal('supabase-config-modal')">Đóng</button>
             <button class="btn btn-primary" onclick="saveSupabaseConfig()"><i class="bi bi-check2"></i> Lưu & Kết nối</button>
@@ -205,14 +208,30 @@ function initSupabaseConfigModal() {
   }
 }
 
+async function loadSampleDataConfirm() {
+  if (confirm('Bạn có muốn nạp bộ dữ liệu mẫu đầy đủ (Khách hàng, Nhà cung cấp, Sản phẩm, Đơn hàng, Công nợ, Nhập kho, Phát mẫu, Phí vận chuyển) vào hệ thống?')) {
+    if (window.dbProvider) {
+      try {
+        await window.dbProvider.loadSampleData(true);
+        showToast('Đã nạp thành công bộ dữ liệu mẫu chuẩn vào hệ thống!', 'success');
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      } catch (err) {
+        showToast('Lỗi khi nạp dữ liệu mẫu: ' + err.message, 'danger');
+      }
+    }
+  }
+}
+
 function resetDemoStorage() {
-  if (confirm('Bạn có chắc chắn muốn xóa toàn bộ dữ liệu mẫu trong bộ nhớ để bắt đầu hệ thống trống từ đầu?')) {
+  if (confirm('Bạn có chắc chắn muốn xóa toàn bộ dữ liệu trong bộ nhớ để bắt đầu hệ thống trống từ đầu?')) {
     localStorage.removeItem('ERP_LOCAL_DATABASE_V1');
     localStorage.removeItem('ERP_CATEGORY_SHIPPING_RATES');
     if (window.dbProvider && typeof window.dbProvider.purgeLegacyDummyData === 'function') {
       window.dbProvider.purgeLegacyDummyData();
     }
-    showToast('Đã xóa sạch toàn bộ dữ liệu mẫu!', 'info');
+    showToast('Đã xóa sạch dữ liệu Demo!', 'info');
     setTimeout(() => {
       window.location.reload();
     }, 400);

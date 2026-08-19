@@ -5,22 +5,1085 @@
 const SUPABASE_CONFIG_KEY = 'ERP_SUPABASE_CONFIG';
 const LOCAL_STORAGE_DB_KEY = 'ERP_LOCAL_DATABASE_V1';
 
-// Default preset rules for Shipping Fee (Empty start)
-const DEFAULT_SHIPPING_RULES_PRESET = [];
+// Default preset rules for Shipping Fee (40 comprehensive rules per SKU and distance brackets)
+const DEFAULT_SHIPPING_RULES_PRESET = [
+  // LAP-DEL-XPS13
+  { id: 'a0000000-0000-4000-8000-000000000001', category: 'LAP-DEL-XPS13', min_distance: 0, max_distance: 15, base_fee: 30000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Khoảng cách ≤ 15 km' },
+  { id: 'a0000000-0000-4000-8000-000000000002', category: 'LAP-DEL-XPS13', min_distance: 15, max_distance: 30, base_fee: 65000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 16 đến ≤ 30 km' },
+  { id: 'a0000000-0000-4000-8000-000000000003', category: 'LAP-DEL-XPS13', min_distance: 30, max_distance: 60, base_fee: 110000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 31 đến ≤ 60 km' },
+  { id: 'a0000000-0000-4000-8000-000000000004', category: 'LAP-DEL-XPS13', min_distance: 60, max_distance: 90, base_fee: 160000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 61 đến ≤ 90 km' },
+  { id: 'a0000000-0000-4000-8000-000000000005', category: 'LAP-DEL-XPS13', min_distance: 90, max_distance: 9999, base_fee: 220000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Khoảng cách > 90 km' },
 
-// Default initial data for enterprise fallback (Empty start)
+  // MON-LG-27GP
+  { id: 'a0000000-0000-4000-8000-000000000006', category: 'MON-LG-27GP', min_distance: 0, max_distance: 15, base_fee: 35000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Khoảng cách ≤ 15 km' },
+  { id: 'a0000000-0000-4000-8000-000000000007', category: 'MON-LG-27GP', min_distance: 15, max_distance: 30, base_fee: 70000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 16 đến ≤ 30 km' },
+  { id: 'a0000000-0000-4000-8000-000000000008', category: 'MON-LG-27GP', min_distance: 30, max_distance: 60, base_fee: 120000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 31 đến ≤ 60 km' },
+  { id: 'a0000000-0000-4000-8000-000000000009', category: 'MON-LG-27GP', min_distance: 60, max_distance: 90, base_fee: 180000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 61 đến ≤ 90 km' },
+  { id: 'a0000000-0000-4000-8000-000000000010', category: 'MON-LG-27GP', min_distance: 90, max_distance: 9999, base_fee: 250000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Khoảng cách > 90 km' },
+
+  // MOU-LOG-MX3S
+  { id: 'a0000000-0000-4000-8000-000000000011', category: 'MOU-LOG-MX3S', min_distance: 0, max_distance: 15, base_fee: 20000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Khoảng cách ≤ 15 km' },
+  { id: 'a0000000-0000-4000-8000-000000000012', category: 'MOU-LOG-MX3S', min_distance: 15, max_distance: 30, base_fee: 35000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 16 đến ≤ 30 km' },
+  { id: 'a0000000-0000-4000-8000-000000000013', category: 'MOU-LOG-MX3S', min_distance: 30, max_distance: 60, base_fee: 55000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 31 đến ≤ 60 km' },
+  { id: 'a0000000-0000-4000-8000-000000000014', category: 'MOU-LOG-MX3S', min_distance: 60, max_distance: 90, base_fee: 80000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 61 đến ≤ 90 km' },
+  { id: 'a0000000-0000-4000-8000-000000000015', category: 'MOU-LOG-MX3S', min_distance: 90, max_distance: 9999, base_fee: 120000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Khoảng cách > 90 km' },
+
+  // KEY-KEY-K2V2
+  { id: 'a0000000-0000-4000-8000-000000000016', category: 'KEY-KEY-K2V2', min_distance: 0, max_distance: 15, base_fee: 20000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Khoảng cách ≤ 15 km' },
+  { id: 'a0000000-0000-4000-8000-000000000017', category: 'KEY-KEY-K2V2', min_distance: 15, max_distance: 30, base_fee: 35000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 16 đến ≤ 30 km' },
+  { id: 'a0000000-0000-4000-8000-000000000018', category: 'KEY-KEY-K2V2', min_distance: 30, max_distance: 60, base_fee: 60000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 31 đến ≤ 60 km' },
+  { id: 'a0000000-0000-4000-8000-000000000019', category: 'KEY-KEY-K2V2', min_distance: 60, max_distance: 90, base_fee: 90000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 61 đến ≤ 90 km' },
+  { id: 'a0000000-0000-4000-8000-000000000020', category: 'KEY-KEY-K2V2', min_distance: 90, max_distance: 9999, base_fee: 130000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Khoảng cách > 90 km' },
+
+  // SRV-DEL-T150
+  { id: 'a0000000-0000-4000-8000-000000000021', category: 'SRV-DEL-T150', min_distance: 0, max_distance: 15, base_fee: 80000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Khoảng cách ≤ 15 km' },
+  { id: 'a0000000-0000-4000-8000-000000000022', category: 'SRV-DEL-T150', min_distance: 15, max_distance: 30, base_fee: 150000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 16 đến ≤ 30 km' },
+  { id: 'a0000000-0000-4000-8000-000000000023', category: 'SRV-DEL-T150', min_distance: 30, max_distance: 60, base_fee: 250000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 31 đến ≤ 60 km' },
+  { id: 'a0000000-0000-4000-8000-000000000024', category: 'SRV-DEL-T150', min_distance: 60, max_distance: 90, base_fee: 380000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 61 đến ≤ 90 km' },
+  { id: 'a0000000-0000-4000-8000-000000000025', category: 'SRV-DEL-T150', min_distance: 90, max_distance: 9999, base_fee: 500000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Khoảng cách > 90 km' },
+
+  // ROU-CIS-1000
+  { id: 'a0000000-0000-4000-8000-000000000026', category: 'ROU-CIS-1000', min_distance: 0, max_distance: 15, base_fee: 25000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Khoảng cách ≤ 15 km' },
+  { id: 'a0000000-0000-4000-8000-000000000027', category: 'ROU-CIS-1000', min_distance: 15, max_distance: 30, base_fee: 45000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 16 đến ≤ 30 km' },
+  { id: 'a0000000-0000-4000-8000-000000000028', category: 'ROU-CIS-1000', min_distance: 30, max_distance: 60, base_fee: 80000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 31 đến ≤ 60 km' },
+  { id: 'a0000000-0000-4000-8000-000000000029', category: 'ROU-CIS-1000', min_distance: 60, max_distance: 90, base_fee: 120000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 61 đến ≤ 90 km' },
+  { id: 'a0000000-0000-4000-8000-000000000030', category: 'ROU-CIS-1000', min_distance: 90, max_distance: 9999, base_fee: 170000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Khoảng cách > 90 km' },
+
+  // HEA-SON-WH1000
+  { id: 'a0000000-0000-4000-8000-000000000031', category: 'HEA-SON-WH1000', min_distance: 0, max_distance: 15, base_fee: 25000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Khoảng cách ≤ 15 km' },
+  { id: 'a0000000-0000-4000-8000-000000000032', category: 'HEA-SON-WH1000', min_distance: 15, max_distance: 30, base_fee: 45000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 16 đến ≤ 30 km' },
+  { id: 'a0000000-0000-4000-8000-000000000033', category: 'HEA-SON-WH1000', min_distance: 30, max_distance: 60, base_fee: 75000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 31 đến ≤ 60 km' },
+  { id: 'a0000000-0000-4000-8000-000000000034', category: 'HEA-SON-WH1000', min_distance: 60, max_distance: 90, base_fee: 110000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 61 đến ≤ 90 km' },
+  { id: 'a0000000-0000-4000-8000-000000000035', category: 'HEA-SON-WH1000', min_distance: 90, max_distance: 9999, base_fee: 160000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Khoảng cách > 90 km' },
+
+  // SSD-SAM-980PRO
+  { id: 'a0000000-0000-4000-8000-000000000036', category: 'SSD-SAM-980PRO', min_distance: 0, max_distance: 15, base_fee: 15000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Khoảng cách ≤ 15 km' },
+  { id: 'a0000000-0000-4000-8000-000000000037', category: 'SSD-SAM-980PRO', min_distance: 15, max_distance: 30, base_fee: 30000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 16 đến ≤ 30 km' },
+  { id: 'a0000000-0000-4000-8000-000000000038', category: 'SSD-SAM-980PRO', min_distance: 30, max_distance: 60, base_fee: 50000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 31 đến ≤ 60 km' },
+  { id: 'a0000000-0000-4000-8000-000000000039', category: 'SSD-SAM-980PRO', min_distance: 60, max_distance: 90, base_fee: 75000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Từ 61 đến ≤ 90 km' },
+  { id: 'a0000000-0000-4000-8000-000000000040', category: 'SSD-SAM-980PRO', min_distance: 90, max_distance: 9999, base_fee: 110000, fee_per_km: 0, fee_per_unit: 0, free_shipping_threshold: 0, is_active: true, notes: 'Khoảng cách > 90 km' }
+];
+
+// Default initial data for enterprise fallback & demo mode
 const DEFAULT_INITIAL_DATA = {
-  customers: [],
-  products: [],
-  orders: [],
-  debts: [],
-  inventory_transactions: [],
-  leads: [],
-  debt_payments: [],
-  returns: [],
-  inbound_orders: [],
-  shipping_rules: [],
-  product_samples: []
+  customers: [
+    {
+      id: '10000000-0000-4000-8000-000000000001',
+      code: 'KH001',
+      name: 'Công ty TNHH Công Nghệ Việt',
+      phone: '0903123456',
+      email: 'contact@congngheviet.vn',
+      distance_km: '5',
+      address: '123 Nguyễn Thị Minh Khai, Phường Bến Nghé, Quận 1, TP.HCM',
+      route: 'Tuyến Quận 1 - Bình Thạnh',
+      sales_person: 'Nguyễn Thanh Tùng',
+      type: 'Customer',
+      group_name: 'VIP',
+      current_debt: 73700000,
+      created_at: '2026-08-01T08:00:00.000Z'
+    },
+    {
+      id: '10000000-0000-4000-8000-000000000002',
+      code: 'KH002',
+      name: 'Tập đoàn Bán Lẻ An Phát',
+      phone: '0918765432',
+      email: 'purchasing@anphatretail.vn',
+      distance_km: '12',
+      address: '45 Lê Văn Sỹ, Phường 13, Quận Phú Nhuận, TP.HCM',
+      route: 'Tuyến Phú Nhuận - Gò Vấp',
+      sales_person: 'Lê Thu Hà',
+      type: 'Customer',
+      group_name: 'Đại lý',
+      current_debt: 59970000,
+      created_at: '2026-08-01T08:30:00.000Z'
+    },
+    {
+      id: '10000000-0000-4000-8000-000000000003',
+      code: 'KH003',
+      name: 'Cửa Hàng Điện Máy Minh Khoa',
+      phone: '0988112233',
+      email: 'minhkhoaelectric@gmail.com',
+      distance_km: '18',
+      address: '789 Quang Trung, Phường 8, Quận Gò Vấp, TP.HCM',
+      route: 'Tuyến Phú Nhuận - Gò Vấp',
+      sales_person: 'Trần Đình Trọng',
+      type: 'Customer',
+      group_name: 'Khách thường',
+      current_debt: 0,
+      created_at: '2026-08-02T09:00:00.000Z'
+    },
+    {
+      id: '10000000-0000-4000-8000-000000000004',
+      code: 'KH004',
+      name: 'Đại Lý Thiết Bị Viễn Thông Á Châu',
+      phone: '0933556677',
+      email: 'info@achaucorp.com.vn',
+      distance_km: '35',
+      address: '12 Đại Lộ Bình Dương, TP. Thủ Dầu Một, Bình Dương',
+      route: 'Tuyến Miền Đông (Bình Dương - Đồng Nai)',
+      sales_person: 'Nguyễn Thanh Tùng',
+      type: 'Customer',
+      group_name: 'Đại lý',
+      current_debt: 15000000,
+      created_at: '2026-08-03T10:00:00.000Z'
+    },
+    {
+      id: '10000000-0000-4000-8000-000000000005',
+      code: 'KH005',
+      name: 'Công ty Cổ phần Giải pháp Số Nam Việt',
+      phone: '0977889900',
+      email: 'contact@namviet-digital.vn',
+      distance_km: '165',
+      address: '102 Trần Phú, Phường Cái Khế, Quận Ninh Kiều, Cần Thơ',
+      route: 'Tuyến Miền Tây (Long An - Tiền Giang - Cần Thơ)',
+      sales_person: 'Lê Thu Hà',
+      type: 'Customer',
+      group_name: 'VIP',
+      current_debt: 0,
+      created_at: '2026-08-04T11:00:00.000Z'
+    },
+    {
+      id: '10000000-0000-4000-8000-000000000006',
+      code: 'KH006',
+      name: 'Trung Tâm Tin Học Trẻ Hoàng Long',
+      phone: '0966445566',
+      email: 'hoanglong.edu@gmail.com',
+      distance_km: '15',
+      address: '88 Võ Văn Ngân, Phường Linh Chiểu, TP. Thủ Đức, TP.HCM',
+      route: 'Tuyến TP. Thủ Đức',
+      sales_person: 'Trần Đình Trọng',
+      type: 'Customer',
+      group_name: 'Khách thường',
+      current_debt: 0,
+      created_at: '2026-08-05T13:30:00.000Z'
+    },
+    // Suppliers in customers collection for robust local storage fallback
+    {
+      id: '00000000-0000-4000-8000-000000000001',
+      code: 'NCC01',
+      name: 'Tổng Kho Phân Phối Dell Vietnam',
+      phone: '02838221100',
+      email: 'order@dellvietnam.com.vn',
+      address: 'Tòa nhà Bitexco, Số 2 Hải Triều, Bến Nghé, Quận 1, TP.HCM',
+      tax_id: '0301234567',
+      contact_person: 'Trần Minh Tuấn - Trưởng phòng Phân phối',
+      group_name: 'Đại lý',
+      route: 'Tuyến Quận 1 - Bình Thạnh',
+      type: 'Supplier',
+      current_debt: 0,
+      notes: 'Nhà phân phối chính thức máy chủ, máy trạm và laptop Dell',
+      created_at: '2026-08-01T07:00:00.000Z'
+    },
+    {
+      id: '00000000-0000-4000-8000-000000000002',
+      code: 'NCC02',
+      name: 'Công Ty TNHH LG Electronics VN',
+      phone: '02838332211',
+      email: 'sales@lg-vietnam.vn',
+      address: 'Khu Công Nghệ Cao, Xa Lộ Hà Nội, TP. Thủ Đức, TP.HCM',
+      tax_id: '0302345678',
+      contact_person: 'Nguyễn Bích Ngọc - Đại diện Bán buôn',
+      group_name: 'Đại lý',
+      route: 'Tuyến TP. Thủ Đức',
+      type: 'Supplier',
+      current_debt: 0,
+      notes: 'Cung cấp màn hình máy tính, thiết bị hiển thị LG UltraGear',
+      created_at: '2026-08-01T07:15:00.000Z'
+    },
+    {
+      id: '00000000-0000-4000-8000-000000000003',
+      code: 'NCC03',
+      name: 'Tổng Kho Linh Kiện Nam Sài Gòn',
+      phone: '02839443322',
+      email: 'namsaigon.parts@gmail.com',
+      address: 'Lô 37-39A, Đường 19/5A, KCN Tân Bình, Tây Thạnh, Tân Phú, TP.HCM',
+      tax_id: '0304567890',
+      contact_person: 'Phạm Quốc Hùng - Quản lý Kho Tổng',
+      group_name: 'Đại lý',
+      route: 'Tuyến Tân Bình - Tân Phú',
+      type: 'Supplier',
+      current_debt: 28000000,
+      notes: 'Tổng kho linh kiện thiết bị mạng Cisco, chuột phím cơ Keychron & Logitech',
+      created_at: '2026-08-01T07:30:00.000Z'
+    },
+    {
+      id: '00000000-0000-4000-8000-000000000004',
+      code: 'NCC04',
+      name: 'Công Ty Cổ Phần Phân Phối Synnex FPT',
+      phone: '02873000911',
+      email: 'fpt_distribution@synnexfpt.com.vn',
+      address: 'Tòa nhà FPT Tân Thuận, Lô L.29B-31B-33B, Đường Tân Thuận, KCX Tân Thuận, Quận 7, TP.HCM',
+      tax_id: '0103456789',
+      contact_person: 'Đỗ Khánh Linh - Giám đốc Kinh doanh Phụ kiện',
+      group_name: 'Đại lý',
+      route: 'Tuyến Quận 7 - Nhà Bè',
+      type: 'Supplier',
+      current_debt: 0,
+      notes: 'Phân phối ủy quyền thiết bị lưu trữ Samsung SSD, tai nghe Sony',
+      created_at: '2026-08-01T07:45:00.000Z'
+    }
+  ],
+
+  products: [
+    {
+      id: '20000000-0000-4000-8000-000000000001',
+      sku: 'LAP-DEL-XPS13',
+      name: 'Laptop Dell XPS 13 i7 16GB 512GB SSD',
+      supplier_id: '00000000-0000-4000-8000-000000000001',
+      supplier_name: 'Tổng Kho Phân Phối Dell Vietnam',
+      category: 'Máy tính & Laptop',
+      unit: 'Cái',
+      cost_price: 21500000,
+      selling_price: 26900000,
+      stock_quantity: 14,
+      min_stock_alert: 5,
+      location: 'Khu A - Kệ 01',
+      created_at: '2026-08-01T08:00:00.000Z'
+    },
+    {
+      id: '20000000-0000-4000-8000-000000000002',
+      sku: 'MON-LG-27GP',
+      name: 'Màn Hình Gaming LG UltraGear 27 inch 2K 144Hz',
+      supplier_id: '00000000-0000-4000-8000-000000000002',
+      supplier_name: 'Công Ty TNHH LG Electronics VN',
+      category: 'Màn hình',
+      unit: 'Cái',
+      cost_price: 4300000,
+      selling_price: 5990000,
+      stock_quantity: 28,
+      min_stock_alert: 8,
+      location: 'Khu A - Kệ 02',
+      created_at: '2026-08-01T08:15:00.000Z'
+    },
+    {
+      id: '20000000-0000-4000-8000-000000000003',
+      sku: 'MOU-LOG-MX3S',
+      name: 'Chuột Không Dây Logitech MX Master 3S',
+      supplier_id: '00000000-0000-4000-8000-000000000003',
+      supplier_name: 'Tổng Kho Linh Kiện Nam Sài Gòn',
+      category: 'Phụ kiện',
+      unit: 'Cái',
+      cost_price: 1750000,
+      selling_price: 2450000,
+      stock_quantity: 45,
+      min_stock_alert: 10,
+      location: 'Khu B - Kệ 01',
+      created_at: '2026-08-01T08:30:00.000Z'
+    },
+    {
+      id: '20000000-0000-4000-8000-000000000004',
+      sku: 'KEY-KEY-K2V2',
+      name: 'Bàn Phím Cơ Wireless Keychron K2 V2 RGB',
+      supplier_id: '00000000-0000-4000-8000-000000000003',
+      supplier_name: 'Tổng Kho Linh Kiện Nam Sài Gòn',
+      category: 'Phụ kiện',
+      unit: 'Cái',
+      cost_price: 1350000,
+      selling_price: 1950000,
+      stock_quantity: 4,
+      min_stock_alert: 8,
+      location: 'Khu B - Kệ 02',
+      created_at: '2026-08-01T08:45:00.000Z'
+    },
+    {
+      id: '20000000-0000-4000-8000-000000000005',
+      sku: 'SRV-DEL-T150',
+      name: 'Máy Chủ Server Dell PowerEdge T150 Xeon E-2314',
+      supplier_id: '00000000-0000-4000-8000-000000000001',
+      supplier_name: 'Tổng Kho Phân Phối Dell Vietnam',
+      category: 'Thiết bị Mạng & Server',
+      unit: 'Cái',
+      cost_price: 30500000,
+      selling_price: 38500000,
+      stock_quantity: 2,
+      min_stock_alert: 2,
+      location: 'Khu C - Tủ Bảo Vệ 01',
+      created_at: '2026-08-01T09:00:00.000Z'
+    },
+    {
+      id: '20000000-0000-4000-8000-000000000006',
+      sku: 'ROU-CIS-1000',
+      name: 'Thiết Bị Định Tuyến Router Cisco RV340 Dual WAN',
+      supplier_id: '00000000-0000-4000-8000-000000000003',
+      supplier_name: 'Tổng Kho Linh Kiện Nam Sài Gòn',
+      category: 'Thiết bị Mạng & Server',
+      unit: 'Bộ',
+      cost_price: 4800000,
+      selling_price: 6500000,
+      stock_quantity: 12,
+      min_stock_alert: 4,
+      location: 'Khu C - Kệ 02',
+      created_at: '2026-08-01T09:15:00.000Z'
+    },
+    {
+      id: '20000000-0000-4000-8000-000000000007',
+      sku: 'HEA-SON-WH1000',
+      name: 'Tai Nghe Chống Ồn Sony WH-1000XM5 Wireless',
+      supplier_id: '00000000-0000-4000-8000-000000000004',
+      supplier_name: 'Công Ty Cổ Phần Phân Phối Synnex FPT',
+      category: 'Phụ kiện',
+      unit: 'Cái',
+      cost_price: 5200000,
+      selling_price: 6990000,
+      stock_quantity: 16,
+      min_stock_alert: 5,
+      location: 'Khu B - Kệ 03',
+      created_at: '2026-08-01T09:30:00.000Z'
+    },
+    {
+      id: '20000000-0000-4000-8000-000000000008',
+      sku: 'SSD-SAM-980PRO',
+      name: 'Ổ Cứng SSD Samsung 980 PRO NVMe M.2 1TB',
+      supplier_id: '00000000-0000-4000-8000-000000000004',
+      supplier_name: 'Công Ty Cổ Phần Phân Phối Synnex FPT',
+      category: 'Linh kiện máy tính',
+      unit: 'Chiếc',
+      cost_price: 2100000,
+      selling_price: 2850000,
+      stock_quantity: 35,
+      min_stock_alert: 10,
+      location: 'Khu A - Kệ 03',
+      created_at: '2026-08-01T09:45:00.000Z'
+    }
+  ],
+
+  orders: [
+    {
+      id: '30000000-0000-4000-8000-000000000001',
+      order_code: 'HD20260801',
+      customer_id: '10000000-0000-4000-8000-000000000001',
+      customer_name: 'Công ty TNHH Công Nghệ Việt',
+      total_amount: 26900000,
+      shipping_fee: 0,
+      delivery_method: 'Delivery',
+      discount: 900000,
+      tax: 0,
+      final_amount: 26000000,
+      paid_amount: 10500000,
+      debt_amount: 15500000,
+      status: 'Completed',
+      payment_method: 'Bank',
+      notes: 'Giao trong giờ hành chính, xuất hóa đơn VAT',
+      created_at: '2026-08-04T10:30:00.000Z',
+      items: [
+        {
+          product_id: '20000000-0000-4000-8000-000000000001',
+          product_sku: 'LAP-DEL-XPS13',
+          product_name: 'Laptop Dell XPS 13 i7 16GB 512GB SSD',
+          unit_price: 26900000,
+          quantity: 1,
+          subtotal: 26900000
+        }
+      ]
+    },
+    {
+      id: '30000000-0000-4000-8000-000000000002',
+      order_code: 'HD20260802',
+      customer_id: '10000000-0000-4000-8000-000000000002',
+      customer_name: 'Tập đoàn Bán Lẻ An Phát',
+      total_amount: 42000000,
+      shipping_fee: 0,
+      delivery_method: 'Delivery',
+      discount: 0,
+      tax: 0,
+      final_amount: 42000000,
+      paid_amount: 0,
+      debt_amount: 42000000,
+      status: 'Completed',
+      payment_method: 'Debt',
+      notes: 'Đơn hàng theo hợp đồng khung đợt 1',
+      created_at: '2026-08-06T14:15:00.000Z',
+      items: [
+        {
+          product_id: '20000000-0000-4000-8000-000000000005',
+          product_sku: 'SRV-DEL-T150',
+          product_name: 'Máy Chủ Server Dell PowerEdge T150 Xeon E-2314',
+          unit_price: 38500000,
+          quantity: 1,
+          subtotal: 38500000
+        },
+        {
+          product_id: '20000000-0000-4000-8000-000000000003',
+          product_sku: 'MOU-LOG-MX3S',
+          product_name: 'Chuột Không Dây Logitech MX Master 3S',
+          unit_price: 3500000,
+          quantity: 1,
+          subtotal: 3500000
+        }
+      ]
+    },
+    {
+      id: '30000000-0000-4000-8000-000000000003',
+      order_code: 'HD20260808',
+      customer_id: '10000000-0000-4000-8000-000000000001',
+      customer_name: 'Công ty TNHH Công Nghệ Việt',
+      total_amount: 53800000,
+      shipping_fee: 0,
+      delivery_method: 'Delivery',
+      discount: 0,
+      tax: 0,
+      final_amount: 53800000,
+      paid_amount: 0,
+      debt_amount: 53800000,
+      status: 'Completed',
+      payment_method: 'Debt',
+      notes: 'Bổ sung máy trạm lập trình',
+      created_at: '2026-08-08T09:15:00.000Z',
+      items: [
+        {
+          product_id: '20000000-0000-4000-8000-000000000001',
+          product_sku: 'LAP-DEL-XPS13',
+          product_name: 'Laptop Dell XPS 13 i7 16GB 512GB SSD',
+          unit_price: 26900000,
+          quantity: 2,
+          subtotal: 53800000
+        }
+      ]
+    },
+    {
+      id: '30000000-0000-4000-8000-000000000004',
+      order_code: 'HD20260725',
+      customer_id: '10000000-0000-4000-8000-000000000001',
+      customer_name: 'Công ty TNHH Công Nghệ Việt',
+      total_amount: 11980000,
+      shipping_fee: 0,
+      delivery_method: 'Pickup',
+      discount: 0,
+      tax: 0,
+      final_amount: 11980000,
+      paid_amount: 7580000,
+      debt_amount: 4400000,
+      status: 'Completed',
+      payment_method: 'Debt',
+      notes: 'Khách tự nhận tại kho',
+      created_at: '2026-07-25T16:00:00.000Z',
+      items: [
+        {
+          product_id: '20000000-0000-4000-8000-000000000002',
+          product_sku: 'MON-LG-27GP',
+          product_name: 'Màn Hình Gaming LG UltraGear 27 inch 2K 144Hz',
+          unit_price: 5990000,
+          quantity: 2,
+          subtotal: 11980000
+        }
+      ]
+    },
+    {
+      id: '30000000-0000-4000-8000-000000000005',
+      order_code: 'HD20260807',
+      customer_id: '10000000-0000-4000-8000-000000000003',
+      customer_name: 'Cửa Hàng Điện Máy Minh Khoa',
+      total_amount: 9840000,
+      shipping_fee: 50000,
+      delivery_method: 'Delivery',
+      discount: 0,
+      tax: 0,
+      final_amount: 9890000,
+      paid_amount: 9890000,
+      debt_amount: 0,
+      status: 'Completed',
+      payment_method: 'Cash',
+      notes: 'Đã thanh toán tiền mặt đủ khi giao',
+      created_at: '2026-08-07T11:20:00.000Z',
+      items: [
+        {
+          product_id: '20000000-0000-4000-8000-000000000004',
+          product_sku: 'KEY-KEY-K2V2',
+          product_name: 'Bàn Phím Cơ Wireless Keychron K2 V2 RGB',
+          unit_price: 1950000,
+          quantity: 2,
+          subtotal: 3900000
+        },
+        {
+          product_id: '20000000-0000-4000-8000-000000000002',
+          product_sku: 'MON-LG-27GP',
+          product_name: 'Màn Hình Gaming LG UltraGear 27 inch 2K 144Hz',
+          unit_price: 5940000,
+          quantity: 1,
+          subtotal: 5940000
+        }
+      ]
+    },
+    {
+      id: '30000000-0000-4000-8000-000000000006',
+      order_code: 'HD20260815',
+      customer_id: '10000000-0000-4000-8000-000000000004',
+      customer_name: 'Đại Lý Thiết Bị Viễn Thông Á Châu',
+      total_amount: 35000000,
+      shipping_fee: 120000,
+      delivery_method: 'Delivery',
+      discount: 120000,
+      tax: 0,
+      final_amount: 35000000,
+      paid_amount: 20000000,
+      debt_amount: 15000000,
+      status: 'Completed',
+      payment_method: 'Debt',
+      notes: 'Đại lý công nợ gối đầu',
+      created_at: '2026-08-15T15:00:00.000Z',
+      items: [
+        {
+          product_id: '20000000-0000-4000-8000-000000000006',
+          product_sku: 'ROU-CIS-1000',
+          product_name: 'Thiết Bị Định Tuyến Router Cisco RV340 Dual WAN',
+          unit_price: 6500000,
+          quantity: 4,
+          subtotal: 26000000
+        },
+        {
+          product_id: '20000000-0000-4000-8000-000000000008',
+          product_sku: 'SSD-SAM-980PRO',
+          product_name: 'Ổ Cứng SSD Samsung 980 PRO NVMe M.2 1TB',
+          unit_price: 2850000,
+          quantity: 3,
+          subtotal: 8550000
+        }
+      ]
+    }
+  ],
+
+  debts: [
+    {
+      id: '40000000-0000-4000-8000-000000000001',
+      code: 'CN-PT-001',
+      customer_id: '10000000-0000-4000-8000-000000000001',
+      customer_name: 'Công ty TNHH Công Nghệ Việt',
+      order_id: '30000000-0000-4000-8000-000000000001',
+      order_code: 'HD20260801',
+      type: 'Receivable',
+      total_amount: 15500000,
+      remaining_amount: 15500000,
+      due_date: '2026-08-25',
+      status: 'Unpaid',
+      notes: 'Công nợ từ đơn HD20260801',
+      items: [
+        {
+          product_id: '20000000-0000-4000-8000-000000000001',
+          product_sku: 'LAP-DEL-XPS13',
+          product_name: 'Laptop Dell XPS 13 i7 16GB 512GB SSD',
+          unit_price: 26900000,
+          quantity: 1,
+          subtotal: 15500000
+        }
+      ],
+      created_at: '2026-08-04T10:30:00.000Z'
+    },
+    {
+      id: '40000000-0000-4000-8000-000000000002',
+      code: 'CN-PT-456',
+      customer_id: '10000000-0000-4000-8000-000000000001',
+      customer_name: 'Công ty TNHH Công Nghệ Việt',
+      order_id: '30000000-0000-4000-8000-000000000003',
+      order_code: 'HD20260808',
+      type: 'Receivable',
+      total_amount: 53800000,
+      remaining_amount: 53800000,
+      due_date: '2026-09-08',
+      status: 'Unpaid',
+      notes: 'Ghi nhận công nợ đơn HD20260808',
+      items: [
+        {
+          product_id: '20000000-0000-4000-8000-000000000001',
+          product_sku: 'LAP-DEL-XPS13',
+          product_name: 'Laptop Dell XPS 13 i7 16GB 512GB SSD',
+          unit_price: 26900000,
+          quantity: 2,
+          subtotal: 53800000
+        }
+      ],
+      created_at: '2026-08-08T09:15:00.000Z'
+    },
+    {
+      id: '40000000-0000-4000-8000-000000000003',
+      code: 'CN-PT-808',
+      customer_id: '10000000-0000-4000-8000-000000000001',
+      customer_name: 'Công ty TNHH Công Nghệ Việt',
+      order_id: '30000000-0000-4000-8000-000000000004',
+      order_code: 'HD20260725',
+      type: 'Receivable',
+      total_amount: 4400000,
+      remaining_amount: 4400000,
+      due_date: '2026-08-15',
+      status: 'Overdue',
+      notes: 'Ghi nhận công nợ đơn HD20260725 quá hạn',
+      items: [
+        {
+          product_id: '20000000-0000-4000-8000-000000000002',
+          product_sku: 'MON-LG-27GP',
+          product_name: 'Màn Hình Gaming LG UltraGear 27 inch 2K 144Hz',
+          unit_price: 5990000,
+          quantity: 2,
+          subtotal: 4400000
+        }
+      ],
+      created_at: '2026-07-25T16:00:00.000Z'
+    },
+    {
+      id: '40000000-0000-4000-8000-000000000004',
+      code: 'CN-PT-002',
+      customer_id: '10000000-0000-4000-8000-000000000002',
+      customer_name: 'Tập đoàn Bán Lẻ An Phát',
+      order_id: '30000000-0000-4000-8000-000000000002',
+      order_code: 'HD20260802',
+      type: 'Receivable',
+      total_amount: 42000000,
+      remaining_amount: 42000000,
+      due_date: '2026-08-30',
+      status: 'Unpaid',
+      notes: 'Công nợ từ đơn HD20260802',
+      items: [
+        {
+          product_id: '20000000-0000-4000-8000-000000000005',
+          product_sku: 'SRV-DEL-T150',
+          product_name: 'Máy Chủ Server Dell PowerEdge T150 Xeon E-2314',
+          unit_price: 38500000,
+          quantity: 1,
+          subtotal: 38500000
+        },
+        {
+          product_id: '20000000-0000-4000-8000-000000000003',
+          product_sku: 'MOU-LOG-MX3S',
+          product_name: 'Chuột Không Dây Logitech MX Master 3S',
+          unit_price: 3500000,
+          quantity: 1,
+          subtotal: 3500000
+        }
+      ],
+      created_at: '2026-08-06T14:15:00.000Z'
+    },
+    {
+      id: '40000000-0000-4000-8000-000000000005',
+      code: 'CN-PT-330',
+      customer_id: '10000000-0000-4000-8000-000000000002',
+      customer_name: 'Tập đoàn Bán Lẻ An Phát',
+      order_id: null,
+      order_code: null,
+      type: 'Receivable',
+      total_amount: 17970000,
+      remaining_amount: 17970000,
+      due_date: '2026-09-01',
+      status: 'Unpaid',
+      notes: 'Công nợ linh kiện đợt 2',
+      items: [
+        {
+          product_id: '20000000-0000-4000-8000-000000000004',
+          product_sku: 'KEY-KEY-K2V2',
+          product_name: 'Bàn Phím Cơ Wireless Keychron K2 V2 RGB',
+          unit_price: 1950000,
+          quantity: 9,
+          subtotal: 17970000
+        }
+      ],
+      created_at: '2026-08-01T15:00:00.000Z'
+    },
+    {
+      id: '40000000-0000-4000-8000-000000000006',
+      code: 'CN-PT-004',
+      customer_id: '10000000-0000-4000-8000-000000000004',
+      customer_name: 'Đại Lý Thiết Bị Viễn Thông Á Châu',
+      order_id: '30000000-0000-4000-8000-000000000006',
+      order_code: 'HD20260815',
+      type: 'Receivable',
+      total_amount: 15000000,
+      remaining_amount: 15000000,
+      due_date: '2026-09-15',
+      status: 'Unpaid',
+      notes: 'Công nợ đơn hàng HD20260815',
+      items: [
+        {
+          product_id: '20000000-0000-4000-8000-000000000006',
+          product_sku: 'ROU-CIS-1000',
+          product_name: 'Thiết Bị Định Tuyến Router Cisco RV340 Dual WAN',
+          unit_price: 6500000,
+          quantity: 4,
+          subtotal: 15000000
+        }
+      ],
+      created_at: '2026-08-15T15:00:00.000Z'
+    },
+    {
+      id: '40000000-0000-4000-8000-000000000007',
+      code: 'CN-TRA-001',
+      customer_id: '10000000-0000-4000-8000-000000000001',
+      customer_name: 'Tổng Kho Linh Kiện Nam Sài Gòn',
+      order_id: null,
+      order_code: null,
+      type: 'Payable',
+      total_amount: 28000000,
+      remaining_amount: 28000000,
+      due_date: '2026-08-20',
+      status: 'Unpaid',
+      notes: 'Nợ tiền hàng nhập linh kiện mạng',
+      items: [
+        {
+          product_id: '20000000-0000-4000-8000-000000000005',
+          product_sku: 'SRV-DEL-T150',
+          product_name: 'Máy Chủ Server Dell PowerEdge T150 Xeon E-2314',
+          unit_price: 28000000,
+          quantity: 1,
+          subtotal: 28000000
+        }
+      ],
+      created_at: '2026-08-01T10:00:00.000Z'
+    }
+  ],
+
+  debt_payments: [
+    {
+      id: '50000000-0000-4000-8000-000000000001',
+      debt_id: '40000000-0000-4000-8000-000000000001',
+      customer_name: 'Công ty TNHH Công Nghệ Việt',
+      payment_code: 'TT-20260804',
+      amount: 10500000,
+      payment_method: 'Bank',
+      payer_name: 'Kế toán Công Nghệ Việt',
+      receiver_name: 'Thủ quỹ ERP',
+      note: 'Thanh toán đợt 1 tiền hàng Laptop XPS (HD20260801)',
+      created_at: '2026-08-04T11:00:00.000Z'
+    },
+    {
+      id: '50000000-0000-4000-8000-000000000002',
+      debt_id: '40000000-0000-4000-8000-000000000006',
+      customer_name: 'Đại Lý Thiết Bị Viễn Thông Á Châu',
+      payment_code: 'TT-20260815',
+      amount: 20000000,
+      payment_method: 'Bank',
+      payer_name: 'Đại diện Đại lý Á Châu',
+      receiver_name: 'Thủ quỹ ERP',
+      note: 'Thanh toán tiền hàng đợt 1 đơn HD20260815',
+      created_at: '2026-08-15T15:30:00.000Z'
+    }
+  ],
+
+  inventory_transactions: [
+    {
+      id: '60000000-0000-4000-8000-000000000001',
+      code: 'NK-20260801',
+      type: 'StockIn',
+      product_id: '20000000-0000-4000-8000-000000000001',
+      product_name: 'Laptop Dell XPS 13 i7 16GB 512GB SSD',
+      sku: 'LAP-DEL-XPS13',
+      quantity: 10,
+      previous_stock: 4,
+      new_stock: 14,
+      reason: 'Nhập kho đơn hàng NK20260801 từ Dell VN',
+      reference_code: 'NK20260801',
+      created_at: '2026-08-01T09:00:00.000Z'
+    },
+    {
+      id: '60000000-0000-4000-8000-000000000002',
+      code: 'XK-20260804',
+      type: 'StockOut',
+      product_id: '20000000-0000-4000-8000-000000000001',
+      product_name: 'Laptop Dell XPS 13 i7 16GB 512GB SSD',
+      sku: 'LAP-DEL-XPS13',
+      quantity: 1,
+      previous_stock: 14,
+      new_stock: 13,
+      reason: 'Xuất bán cho khách hàng Công Nghệ Việt (HD20260801)',
+      reference_code: 'HD20260801',
+      created_at: '2026-08-04T10:30:00.000Z'
+    },
+    {
+      id: '60000000-0000-4000-8000-000000000003',
+      code: 'NK-20260803',
+      type: 'StockIn',
+      product_id: '20000000-0000-4000-8000-000000000002',
+      product_name: 'Màn Hình Gaming LG UltraGear 27 inch 2K 144Hz',
+      sku: 'MON-LG-27GP',
+      quantity: 20,
+      previous_stock: 10,
+      new_stock: 30,
+      reason: 'Nhập kho lô màn hình từ LG Electronics VN',
+      reference_code: 'NK20260803',
+      created_at: '2026-08-03T14:30:00.000Z'
+    },
+    {
+      id: '60000000-0000-4000-8000-000000000004',
+      code: 'XK-20260807',
+      type: 'StockOut',
+      product_id: '20000000-0000-4000-8000-000000000004',
+      product_name: 'Bàn Phím Cơ Wireless Keychron K2 V2 RGB',
+      sku: 'KEY-KEY-K2V2',
+      quantity: 2,
+      previous_stock: 6,
+      new_stock: 4,
+      reason: 'Xuất bán đơn HD20260807 (Điện Máy Minh Khoa)',
+      reference_code: 'HD20260807',
+      created_at: '2026-08-07T11:20:00.000Z'
+    }
+  ],
+
+  leads: [
+    {
+      id: '70000000-0000-4000-8000-000000000001',
+      name: 'Nguyễn Văn Nam',
+      company: 'Công ty Cổ phần Phần mềm BK Tech',
+      phone: '0933112233',
+      email: 'nam.nguyen@bksoft.vn',
+      estimated_value: 120000000,
+      expected_value: 120000000,
+      stage: 'Proposal',
+      assigned_to: 'Nguyễn Thanh Tùng',
+      notes: 'Yêu cầu báo giá 10 máy trạm Dell XPS và 10 màn hình LG UltraGear',
+      created_at: '2026-08-11T08:30:00.000Z'
+    },
+    {
+      id: '70000000-0000-4000-8000-000000000002',
+      name: 'Trần Thị Thu Hoa',
+      company: 'Chuỗi Nhà Hàng Cà Phê Phố Biển',
+      phone: '0944556677',
+      email: 'hoatt@phobien.com',
+      estimated_value: 45000000,
+      expected_value: 45000000,
+      stage: 'Negotiation',
+      assigned_to: 'Lê Thu Hà',
+      notes: 'Cần tư vấn thiết bị mạng Cisco và hệ thống server POS cho 3 chi nhánh',
+      created_at: '2026-08-14T10:00:00.000Z'
+    },
+    {
+      id: '70000000-0000-4000-8000-000000000003',
+      name: 'Phạm Quốc Cường',
+      company: 'Đại Học Quốc Tế Đông Á',
+      phone: '0966778899',
+      email: 'cuong.pq@easia.edu.vn',
+      estimated_value: 350000000,
+      expected_value: 350000000,
+      stage: 'Contacted',
+      assigned_to: 'Nguyễn Thanh Tùng',
+      notes: 'Dự án phòng Lab máy tính và Server Dell PowerEdge',
+      created_at: '2026-08-16T13:45:00.000Z'
+    },
+    {
+      id: '70000000-0000-4000-8000-000000000004',
+      name: 'Lê Văn Minh',
+      company: 'Công ty TNHH Logistics Vận Tải Toàn Cầu',
+      phone: '0912334455',
+      email: 'minh.le@globallogistics.vn',
+      estimated_value: 85000000,
+      expected_value: 85000000,
+      stage: 'Lead',
+      assigned_to: 'Trần Đình Trọng',
+      notes: 'Khách liên hệ qua website cần nâng cấp hệ thống máy văn phòng',
+      created_at: '2026-08-18T09:15:00.000Z'
+    }
+  ],
+
+  returns: [
+    {
+      id: '80000000-0000-4000-8000-000000000001',
+      return_code: 'TH20260801',
+      order_id: '30000000-0000-4000-8000-000000000001',
+      order_code: 'HD20260801',
+      customer_id: '10000000-0000-4000-8000-000000000001',
+      customer_name: 'Công ty TNHH Công Nghệ Việt',
+      total_refund: 2450000,
+      refund_amount: 2450000,
+      refund_method: 'DebtDeduction',
+      reason: 'Khách hàng đổi mẫu chuột, trừ trực tiếp vào công nợ',
+      condition_status: 'Good',
+      created_at: '2026-08-07T15:20:00.000Z'
+    }
+  ],
+
+  inbound_orders: [
+    {
+      id: '90000000-0000-4000-8000-000000000001',
+      code: 'NK20260801',
+      supplier_id: '00000000-0000-4000-8000-000000000001',
+      supplier_name: 'Tổng Kho Phân Phối Dell Vietnam',
+      warehouse: 'Kho Tổng (Miền Nam)',
+      total_amount: 215000000,
+      status: 'Completed',
+      received_by: 'Trần Thủ Kho',
+      received_at: '2026-08-01T09:00:00.000Z',
+      notes: 'Nhập lô 10 Laptop Dell XPS 13',
+      items: [
+        {
+          product_id: '20000000-0000-4000-8000-000000000001',
+          sku: 'LAP-DEL-XPS13',
+          product_name: 'Laptop Dell XPS 13 i7 16GB 512GB SSD',
+          quantity: 10,
+          unit: 'Cái',
+          unit_price: 21500000,
+          subtotal: 215000000
+        }
+      ],
+      created_at: '2026-08-01T08:00:00.000Z'
+    },
+    {
+      id: '90000000-0000-4000-8000-000000000002',
+      code: 'NK20260803',
+      supplier_id: '00000000-0000-4000-8000-000000000002',
+      supplier_name: 'Công Ty TNHH LG Electronics VN',
+      warehouse: 'Kho Tổng (Miền Nam)',
+      total_amount: 86000000,
+      status: 'Completed',
+      received_by: 'Trần Thủ Kho',
+      received_at: '2026-08-03T14:30:00.000Z',
+      notes: 'Nhập 20 màn hình LG UltraGear 27 inch',
+      items: [
+        {
+          product_id: '20000000-0000-4000-8000-000000000002',
+          sku: 'MON-LG-27GP',
+          product_name: 'Màn Hình Gaming LG UltraGear 27 inch 2K 144Hz',
+          quantity: 20,
+          unit: 'Cái',
+          unit_price: 4300000,
+          subtotal: 86000000
+        }
+      ],
+      created_at: '2026-08-03T10:00:00.000Z'
+    },
+    {
+      id: '90000000-0000-4000-8000-000000000003',
+      code: 'NK20260818',
+      supplier_id: '00000000-0000-4000-8000-000000000003',
+      supplier_name: 'Tổng Kho Linh Kiện Nam Sài Gòn',
+      warehouse: 'Kho Tổng (Miền Nam)',
+      total_amount: 38500000,
+      status: 'Pending',
+      received_by: 'Nguyễn Văn Kho',
+      received_at: null,
+      notes: 'Đơn đặt hàng phụ kiện Keychron & Cisco đang chờ nhà xe giao',
+      items: [
+        {
+          product_id: '20000000-0000-4000-8000-000000000004',
+          sku: 'KEY-KEY-K2V2',
+          product_name: 'Bàn Phím Cơ Wireless Keychron K2 V2 RGB',
+          quantity: 10,
+          unit: 'Cái',
+          unit_price: 1350000,
+          subtotal: 13500000
+        },
+        {
+          product_id: '20000000-0000-4000-8000-000000000006',
+          sku: 'ROU-CIS-1000',
+          product_name: 'Thiết Bị Định Tuyến Router Cisco RV340 Dual WAN',
+          quantity: 5,
+          unit: 'Bộ',
+          unit_price: 5000000,
+          subtotal: 25000000
+        }
+      ],
+      created_at: '2026-08-18T08:00:00.000Z'
+    }
+  ],
+
+  shipping_rules: DEFAULT_SHIPPING_RULES_PRESET,
+
+  product_samples: [
+    {
+      id: 'b0000000-0000-4000-8000-000000000001',
+      code: 'PM-202608-01',
+      customer_id: '10000000-0000-4000-8000-000000000002',
+      customer_name: 'Tập đoàn Bán Lẻ An Phát',
+      customer_phone: '0918765432',
+      product_id: '20000000-0000-4000-8000-000000000004',
+      product_name: 'Bàn Phím Cơ Wireless Keychron K2 V2 RGB',
+      product_sku: 'KEY-KEY-K2V2',
+      category: 'Phụ kiện',
+      quantity: 2,
+      unit: 'Cái',
+      sales_person: 'Lê Thu Hà',
+      route: 'Tuyến Phú Nhuận - Gò Vấp',
+      handover_date: '2026-08-02',
+      expected_return_date: '2026-08-20',
+      status: 'Displaying',
+      feedback: 'Khách đánh giá gõ phím êm, đèn RGB đẹp, đang chạy thử chương trình trải nghiệm showroom',
+      purpose: 'Trưng bày tại kệ trải nghiệm khách hàng',
+      notes: 'Bàn giao nguyên seal 2 bàn phím mẫu',
+      created_at: '2026-08-02T09:00:00.000Z'
+    },
+    {
+      id: 'b0000000-0000-4000-8000-000000000002',
+      code: 'PM-202608-02',
+      customer_id: '10000000-0000-4000-8000-000000000001',
+      customer_name: 'Công ty TNHH Công Nghệ Việt',
+      customer_phone: '0903123456',
+      product_id: '20000000-0000-4000-8000-000000000003',
+      product_name: 'Chuột Không Dây Logitech MX Master 3S',
+      product_sku: 'MOU-LOG-MX3S',
+      category: 'Phụ kiện',
+      quantity: 1,
+      unit: 'Cái',
+      sales_person: 'Nguyễn Thanh Tùng',
+      route: 'Tuyến Quận 1 - Bình Thạnh',
+      handover_date: '2026-08-05',
+      expected_return_date: '2026-08-15',
+      status: 'Converted',
+      feedback: 'Khách hàng rất hài lòng về độ mượt của con lăn và độ êm, đã chốt mua kèm đơn hàng HD20260808',
+      purpose: 'Dùng thử nội bộ cho team Thiết kế UI/UX',
+      notes: 'Đã xuất hóa đơn chuyển đổi sang bán',
+      created_at: '2026-08-05T14:00:00.000Z'
+    },
+    {
+      id: 'b0000000-0000-4000-8000-000000000003',
+      code: 'PM-202608-03',
+      customer_id: '10000000-0000-4000-8000-000000000004',
+      customer_name: 'Đại Lý Thiết Bị Viễn Thông Á Châu',
+      customer_phone: '0933556677',
+      product_id: '20000000-0000-4000-8000-000000000006',
+      product_name: 'Thiết Bị Định Tuyến Router Cisco RV340 Dual WAN',
+      product_sku: 'ROU-CIS-1000',
+      category: 'Thiết bị Mạng & Server',
+      quantity: 1,
+      unit: 'Bộ',
+      sales_person: 'Nguyễn Thanh Tùng',
+      route: 'Tuyến Miền Đông (Bình Dương - Đồng Nai)',
+      handover_date: '2026-08-10',
+      expected_return_date: '2026-08-25',
+      status: 'Displaying',
+      feedback: 'Đang thử nghiệm chịu tải cho gói mạng doanh nghiệp',
+      purpose: 'Thử nghiệm PoC kỹ thuật cho dự án',
+      notes: 'Cấp mượn demo phòng lab',
+      created_at: '2026-08-10T10:30:00.000Z'
+    },
+    {
+      id: 'b0000000-0000-4000-8000-000000000004',
+      code: 'PM-202608-04',
+      customer_id: '10000000-0000-4000-8000-000000000006',
+      customer_name: 'Trung Tâm Tin Học Trẻ Hoàng Long',
+      customer_phone: '0966445566',
+      product_id: '20000000-0000-4000-8000-000000000002',
+      product_name: 'Màn Hình Gaming LG UltraGear 27 inch 2K 144Hz',
+      product_sku: 'MON-LG-27GP',
+      category: 'Màn hình',
+      quantity: 1,
+      unit: 'Cái',
+      sales_person: 'Trần Đình Trọng',
+      route: 'Tuyến TP. Thủ Đức',
+      handover_date: '2026-07-28',
+      expected_return_date: '2026-08-10',
+      status: 'Returned',
+      feedback: 'Chất lượng hiển thị sắc nét, trung tâm dự kiến đặt mua 10 chiếc vào tháng tới',
+      purpose: 'Trưng bày tại phòng học chuyên đề Đồ họa',
+      notes: 'Đã kiểm tra thu hồi về kho, tình trạng nguyên vẹn 100%',
+      created_at: '2026-07-28T09:00:00.000Z'
+    },
+    {
+      id: 'b0000000-0000-4000-8000-000000000005',
+      code: 'PM-202608-05',
+      customer_id: '10000000-0000-4000-8000-000000000005',
+      customer_name: 'Công ty Cổ phần Giải pháp Số Nam Việt',
+      customer_phone: '0977889900',
+      product_id: '20000000-0000-4000-8000-000000000007',
+      product_name: 'Tai Nghe Chống Ồn Sony WH-1000XM5 Wireless',
+      product_sku: 'HEA-SON-WH1000',
+      category: 'Phụ kiện',
+      quantity: 1,
+      unit: 'Cái',
+      sales_person: 'Lê Thu Hà',
+      route: 'Tuyến Miền Tây (Long An - Tiền Giang - Cần Thơ)',
+      handover_date: '2026-08-12',
+      expected_return_date: '2026-08-26',
+      status: 'Displaying',
+      feedback: 'Khách đánh giá chống ồn vượt trội, pin trâu',
+      purpose: 'Demo cho ban giám đốc',
+      notes: 'Hàng mẫu màu đen nguyên hộp',
+      created_at: '2026-08-12T11:00:00.000Z'
+    }
+  ]
 };
 
 // Helper functions for UUID validation and Supabase payload sanitization
@@ -76,8 +1139,21 @@ class SupabaseProvider {
     window.location.reload();
   }
 
-  ensureLocalStorageDb() {
-    if (!localStorage.getItem(LOCAL_STORAGE_DB_KEY)) {
+  ensureLocalStorageDb(forceSeed = false) {
+    const raw = localStorage.getItem(LOCAL_STORAGE_DB_KEY);
+    if (!raw || forceSeed) {
+      localStorage.setItem(LOCAL_STORAGE_DB_KEY, JSON.stringify(DEFAULT_INITIAL_DATA));
+      return;
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      const isCompletelyEmpty = (!parsed.customers || parsed.customers.length === 0) &&
+        (!parsed.products || parsed.products.length === 0) &&
+        (!parsed.orders || parsed.orders.length === 0);
+      if (isCompletelyEmpty) {
+        localStorage.setItem(LOCAL_STORAGE_DB_KEY, JSON.stringify(DEFAULT_INITIAL_DATA));
+      }
+    } catch (e) {
       localStorage.setItem(LOCAL_STORAGE_DB_KEY, JSON.stringify(DEFAULT_INITIAL_DATA));
     }
   }
@@ -89,6 +1165,181 @@ class SupabaseProvider {
 
   saveLocalStorageDb(data) {
     localStorage.setItem(LOCAL_STORAGE_DB_KEY, JSON.stringify(data));
+  }
+
+  async loadSampleData(force = true) {
+    if (this.isLiveMode) {
+      try {
+        // 1. Customers
+        const custData = DEFAULT_INITIAL_DATA.customers.filter(c => c.type !== 'Supplier');
+        for (const c of custData) {
+          await this.supabase.from('customers').upsert([prepareSupabasePayload(c)], { onConflict: 'code' });
+        }
+
+        // 2. Suppliers
+        try {
+          const supData = DEFAULT_INITIAL_DATA.customers.filter(c => c.type === 'Supplier');
+          for (const s of supData) {
+            const sp = { ...s };
+            delete sp.type;
+            await this.supabase.from('suppliers').upsert([prepareSupabasePayload(sp)], { onConflict: 'code' });
+          }
+        } catch (e) {
+          console.warn('Suppliers table not found on Supabase, falling back to customers table:', e);
+          const supData = DEFAULT_INITIAL_DATA.customers.filter(c => c.type === 'Supplier');
+          for (const s of supData) {
+            await this.supabase.from('customers').upsert([prepareSupabasePayload(s)], { onConflict: 'code' });
+          }
+        }
+
+        // 3. Products
+        for (const p of DEFAULT_INITIAL_DATA.products) {
+          await this.supabase.from('products').upsert([prepareSupabasePayload(p)], { onConflict: 'sku' });
+        }
+
+        // 4. Orders & Order Items
+        for (const o of DEFAULT_INITIAL_DATA.orders) {
+          const ordPayload = { ...o };
+          const items = ordPayload.items || [];
+          delete ordPayload.items;
+          const { data: insOrd } = await this.supabase.from('orders').upsert([prepareSupabasePayload(ordPayload)], { onConflict: 'order_code' }).select();
+          if (insOrd && insOrd.length > 0 && items.length > 0) {
+            const orderId = insOrd[0].id;
+            for (const item of items) {
+              await this.supabase.from('order_items').insert([{
+                order_id: orderId,
+                product_id: item.product_id,
+                product_name: item.product_name,
+                unit_price: item.unit_price,
+                quantity: item.quantity,
+                subtotal: item.subtotal
+              }]);
+            }
+          }
+        }
+
+        // 5. Debts
+        for (const d of DEFAULT_INITIAL_DATA.debts) {
+          const dPayload = { ...d };
+          delete dPayload.items;
+          await this.supabase.from('debts').upsert([prepareSupabasePayload(dPayload)], { onConflict: 'code' });
+        }
+
+        // 6. Debt Payments
+        for (const dp of DEFAULT_INITIAL_DATA.debt_payments) {
+          const dpPayload = {
+            id: dp.id,
+            debt_id: dp.debt_id,
+            customer_name: dp.customer_name,
+            payment_code: dp.payment_code,
+            amount: dp.amount,
+            payment_method: dp.payment_method,
+            note: dp.note,
+            created_at: dp.created_at
+          };
+          await this.supabase.from('debt_payments').upsert([prepareSupabasePayload(dpPayload)], { onConflict: 'payment_code' });
+        }
+
+        // 7. Inventory Transactions
+        for (const it of DEFAULT_INITIAL_DATA.inventory_transactions) {
+          const itPayload = {
+            id: it.id,
+            code: it.code,
+            type: it.type,
+            product_id: it.product_id,
+            product_name: it.product_name,
+            quantity: it.quantity,
+            previous_stock: it.previous_stock,
+            new_stock: it.new_stock,
+            reason: it.reason,
+            created_at: it.created_at
+          };
+          await this.supabase.from('inventory_transactions').upsert([prepareSupabasePayload(itPayload)], { onConflict: 'code' });
+        }
+
+        // 8. Leads
+        for (const l of DEFAULT_INITIAL_DATA.leads) {
+          const lPayload = {
+            id: l.id,
+            name: l.name,
+            company: l.company,
+            phone: l.phone,
+            email: l.email,
+            estimated_value: l.estimated_value,
+            stage: l.stage,
+            assigned_to: l.assigned_to,
+            notes: l.notes,
+            created_at: l.created_at
+          };
+          await this.supabase.from('leads').upsert([prepareSupabasePayload(lPayload)]);
+        }
+
+        // 9. Returns
+        for (const r of DEFAULT_INITIAL_DATA.returns) {
+          const rPayload = {
+            id: r.id,
+            return_code: r.return_code,
+            order_code: r.order_code,
+            customer_name: r.customer_name,
+            total_refund: r.total_refund,
+            refund_method: r.refund_method,
+            reason: r.reason,
+            created_at: r.created_at
+          };
+          await this.supabase.from('returns').upsert([prepareSupabasePayload(rPayload)], { onConflict: 'return_code' });
+        }
+
+        // 10. Inbound Orders
+        for (const inb of DEFAULT_INITIAL_DATA.inbound_orders) {
+          await this.supabase.from('inbound_orders').upsert([prepareSupabasePayload(inb)], { onConflict: 'code' });
+        }
+
+        // 11. Shipping Rules
+        for (const sr of DEFAULT_INITIAL_DATA.shipping_rules) {
+          const srPayload = {
+            id: sr.id,
+            category: sr.category,
+            min_distance: sr.min_distance,
+            max_distance: sr.max_distance,
+            base_fee: sr.base_fee,
+            is_active: sr.is_active,
+            notes: sr.notes
+          };
+          await this.supabase.from('shipping_rules').upsert([prepareSupabasePayload(srPayload)]);
+        }
+
+        // 12. Product Samples
+        for (const sm of DEFAULT_INITIAL_DATA.product_samples) {
+          const smPayload = {
+            id: sm.id,
+            code: sm.code,
+            customer_id: sm.customer_id,
+            customer_name: sm.customer_name,
+            customer_phone: sm.customer_phone,
+            route: sm.route,
+            sales_person: sm.sales_person,
+            product_id: sm.product_id,
+            product_sku: sm.product_sku,
+            product_name: sm.product_name,
+            category: sm.category,
+            quantity: sm.quantity,
+            unit: sm.unit,
+            handover_date: sm.handover_date,
+            status: sm.status,
+            feedback: sm.feedback,
+            notes: sm.notes,
+            created_at: sm.created_at
+          };
+          await this.supabase.from('product_samples').upsert([prepareSupabasePayload(smPayload)], { onConflict: 'code' });
+        }
+      } catch (err) {
+        console.error('Error seeding Supabase live database:', err);
+        throw err;
+      }
+    }
+
+    // Always ensure local storage is refreshed with sample data
+    this.saveLocalStorageDb(JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA)));
   }
 
   // --- API METHODS ---
@@ -220,7 +1471,7 @@ class SupabaseProvider {
         createdCust = { ...customer, id: data[0].id };
       }
     }
-    
+
     const db = this.getLocalStorageDb();
     if (!db.customers) db.customers = [];
     const existingIdx = db.customers.findIndex(c => c.id === createdCust.id);
@@ -304,8 +1555,8 @@ class SupabaseProvider {
 
     // Check duplicate SKU before adding against current active products in the SAME warehouse location
     const targetLoc = (product.location || '').toString().trim().toLowerCase();
-    const duplicateBySku = (currentProducts || []).find(p => 
-      p.id !== product.id && 
+    const duplicateBySku = (currentProducts || []).find(p =>
+      p.id !== product.id &&
       (p.sku || '').toString().trim().toLowerCase() === (product.sku || '').toString().trim().toLowerCase() &&
       (p.location || '').toString().trim().toLowerCase() === targetLoc
     );
@@ -454,7 +1705,7 @@ class SupabaseProvider {
     const db = this.getLocalStorageDb();
 
     orderData.id = orderData.id || (isLive ? undefined : 'o_' + Date.now());
-    orderData.order_code = orderData.order_code || 'HD' + new Date().toISOString().slice(0,10).replace(/-/g,'') + Math.floor(10 + Math.random() * 90);
+    orderData.order_code = orderData.order_code || 'HD' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + Math.floor(10 + Math.random() * 90);
     orderData.created_at = orderData.created_at || new Date().toISOString();
 
     let savedOrder = { ...orderData };
@@ -512,7 +1763,7 @@ class SupabaseProvider {
       if (hasShippingSubItem) {
         const prodItemsOnly = items.filter(i => !(i.is_shipping_fee || (i.product_sku && (i.product_sku === 'PVC' || i.product_sku.startsWith('PVC-'))) || (i.product_name && (i.product_name.includes('Phí vận chuyển') || i.product_name.includes('vận chuyển -')))));
         const shipItemsOnly = items.filter(i => i.is_shipping_fee || (i.product_sku && (i.product_sku === 'PVC' || i.product_sku.startsWith('PVC-'))) || (i.product_name && (i.product_name.includes('Phí vận chuyển') || i.product_name.includes('vận chuyển -'))));
-        
+
         const usedShipIndices = new Set();
         prodItemsOnly.forEach((prodItem, idx) => {
           finalItems.push(prodItem);
@@ -620,8 +1871,8 @@ class SupabaseProvider {
         const qty = Number(item.quantity) || 1;
 
         // 1. Find and update product in local storage DB
-        const localProd = db.products.find(p => 
-          (prodId && p.id === prodId) || 
+        const localProd = db.products.find(p =>
+          (prodId && p.id === prodId) ||
           (prodSku && itemLoc && p.sku === prodSku && (p.location || '').toLowerCase() === itemLoc.toLowerCase()) ||
           (prodSku && p.sku === prodSku) ||
           (prodName && p.name === prodName)
@@ -915,7 +2166,7 @@ class SupabaseProvider {
       const debtAmt = Number(order.debt_amount);
       const oCustName = (order.customer_name || 'Khách Vãng Lai').trim();
       const code = order.order_code || order.id;
-      const exists = db.debts.find(d => 
+      const exists = db.debts.find(d =>
         (d.order_code && (String(d.order_code) === String(code) || String(d.order_code) === String(order.id))) ||
         (d.order_id && (String(d.order_id) === String(order.id) || String(d.order_id) === 'o_' + String(order.id))) ||
         (d.id && (String(d.id) === 'd_ord_' + String(order.id) || String(d.id) === String(order.id))) ||
@@ -951,7 +2202,7 @@ class SupabaseProvider {
         const remAmt = Math.max(0, totalAmt - paidAmt);
         const sName = (inb.supplier_name || 'Nhà Cung Cấp').trim();
         const code = inb.code || inb.id;
-        const exists = db.debts.find(d => 
+        const exists = db.debts.find(d =>
           (d.order_code && (String(d.order_code) === String(code) || String(d.order_code) === String(inb.id))) ||
           (d.id && (String(d.id) === String(inb.id) || String(d.id) === 'd_inb_' + String(inb.id))) ||
           (d.notes && code && d.notes.includes(code))
@@ -977,9 +2228,9 @@ class SupabaseProvider {
       }
     });
 
-    const isSupplierPayment = (customerName && (db.customers || []).some(c => (c.name || '').trim().toLowerCase() === normCustName && c.type === 'Supplier')) || 
-                              (customerName && (db.inbound_orders || []).some(i => (i.supplier_name || '').trim().toLowerCase() === normCustName)) ||
-                              (debtId !== 'AUTO' && debtId !== 'ALL' && (db.debts || []).some(d => String(d.id) === String(debtId) && d.type === 'Payable'));
+    const isSupplierPayment = (customerName && (db.customers || []).some(c => (c.name || '').trim().toLowerCase() === normCustName && c.type === 'Supplier')) ||
+      (customerName && (db.inbound_orders || []).some(i => (i.supplier_name || '').trim().toLowerCase() === normCustName)) ||
+      (debtId !== 'AUTO' && debtId !== 'ALL' && (db.debts || []).some(d => String(d.id) === String(debtId) && d.type === 'Payable'));
     const codePrefix = isSupplierPayment ? 'TT-CHI-' : 'TT-THU-';
 
     // AUTO distribution across customer's open debt vouchers (FIFO)
@@ -1010,9 +2261,9 @@ class SupabaseProvider {
         remainingPaymentToDistribute -= payForThisDebt;
         debt.status = newRemaining === 0 ? 'Paid' : 'Partial';
 
-        const localDebt = (db.debts || []).find(d => 
-          String(d.id) === String(debt.id) || 
-          String(d.code) === String(debt.code) || 
+        const localDebt = (db.debts || []).find(d =>
+          String(d.id) === String(debt.id) ||
+          String(d.code) === String(debt.code) ||
           (d.order_code && String(d.order_code) === String(debt.order_code))
         );
         if (localDebt) {
@@ -1021,7 +2272,7 @@ class SupabaseProvider {
         }
 
         // Sync corresponding sales order if applicable
-        const orderMatch = (db.orders || []).find(o => 
+        const orderMatch = (db.orders || []).find(o =>
           (debt.order_code && (String(o.order_code) === String(debt.order_code) || String(o.id) === String(debt.order_code))) ||
           (debt.order_id && (String(o.id) === String(debt.order_id) || 'o_' + String(o.id) === String(debt.order_id))) ||
           (debt.code && String(o.order_code) === String(debt.code))
@@ -1035,12 +2286,12 @@ class SupabaseProvider {
           if (isLive && isValidUUID(orderMatch.id)) {
             try {
               await this.supabase.from('orders').update({ debt_amount: orderMatch.debt_amount, paid_amount: orderMatch.paid_amount }).eq('id', orderMatch.id);
-            } catch (oe) {}
+            } catch (oe) { }
           }
         }
 
         // Sync corresponding inbound order if applicable
-        const inboundMatch = (db.inbound_orders || []).find(i => 
+        const inboundMatch = (db.inbound_orders || []).find(i =>
           (debt.order_code && (String(i.code) === String(debt.order_code) || String(i.id) === String(debt.order_code))) ||
           (debt.id && (String(debt.id) === String(i.id) || String(debt.id) === 'd_inb_' + String(i.id)))
         );
@@ -1049,7 +2300,7 @@ class SupabaseProvider {
           if (isLive && isValidUUID(inboundMatch.id)) {
             try {
               await this.supabase.from('inbound_orders').update({ paid_amount: inboundMatch.paid_amount }).eq('id', inboundMatch.id);
-            } catch (ie) {}
+            } catch (ie) { }
           }
         }
 
@@ -1101,10 +2352,10 @@ class SupabaseProvider {
     }
 
     // Specific debt voucher payment (Full or Partial)
-    let debt = (db.debts || []).find(d => 
-      String(d.id) === String(debtId) || 
-      String(d.code) === String(debtId) || 
-      (d.order_code && String(d.order_code) === String(debtId)) || 
+    let debt = (db.debts || []).find(d =>
+      String(d.id) === String(debtId) ||
+      String(d.code) === String(debtId) ||
+      (d.order_code && String(d.order_code) === String(debtId)) ||
       (d.order_id && String(d.order_id) === String(debtId)) ||
       (debtId && String(debtId).startsWith('d_ord_') && String(d.order_id) === String(debtId).replace('d_ord_', '')) ||
       (debtId && String(debtId).startsWith('d_inb_') && String(d.id) === String(debtId).replace('d_inb_', ''))
@@ -1118,9 +2369,9 @@ class SupabaseProvider {
 
     // If debt is not in db.debts, create it from db.orders or db.inbound_orders
     if (!debt && !supaDebt) {
-      const matchedOrder = (db.orders || []).find(o => 
-        String(o.id) === String(debtId) || 
-        String(o.order_code) === String(debtId) || 
+      const matchedOrder = (db.orders || []).find(o =>
+        String(o.id) === String(debtId) ||
+        String(o.order_code) === String(debtId) ||
         ('d_ord_' + String(o.id)) === String(debtId)
       );
       if (matchedOrder) {
@@ -1139,9 +2390,9 @@ class SupabaseProvider {
         };
         db.debts.push(debt);
       } else {
-        const matchedInb = (db.inbound_orders || []).find(i => 
-          String(i.id) === String(debtId) || 
-          String(i.code) === String(debtId) || 
+        const matchedInb = (db.inbound_orders || []).find(i =>
+          String(i.id) === String(debtId) ||
+          String(i.code) === String(debtId) ||
           ('d_inb_' + String(i.id)) === String(debtId)
         );
         if (matchedInb) {
@@ -1174,7 +2425,7 @@ class SupabaseProvider {
     }
 
     // Sync corresponding sales order if applicable
-    const orderMatch = (db.orders || []).find(o => 
+    const orderMatch = (db.orders || []).find(o =>
       (debt && debt.order_code && (String(o.order_code) === String(debt.order_code) || String(o.id) === String(debt.order_code))) ||
       (debt && debt.order_id && (String(o.id) === String(debt.order_id) || 'o_' + String(o.id) === String(debt.order_id))) ||
       (debt && debt.code && String(o.order_code) === String(debt.code)) ||
@@ -1189,12 +2440,12 @@ class SupabaseProvider {
       if (isLive && isValidUUID(orderMatch.id)) {
         try {
           await this.supabase.from('orders').update({ debt_amount: orderMatch.debt_amount, paid_amount: orderMatch.paid_amount }).eq('id', orderMatch.id);
-        } catch (oe) {}
+        } catch (oe) { }
       }
     }
 
     // Sync corresponding inbound order if applicable
-    const inboundMatch = (db.inbound_orders || []).find(i => 
+    const inboundMatch = (db.inbound_orders || []).find(i =>
       (debt && debt.order_code && (String(i.code) === String(debt.order_code) || String(i.id) === String(debt.order_code))) ||
       (debt && debt.id && (String(debt.id) === String(i.id) || String(debt.id) === 'd_inb_' + String(i.id))) ||
       (debtId && (String(i.id) === String(debtId) || String(i.code) === String(debtId) || ('d_inb_' + String(i.id)) === String(debtId)))
@@ -1204,7 +2455,7 @@ class SupabaseProvider {
       if (isLive && isValidUUID(inboundMatch.id)) {
         try {
           await this.supabase.from('inbound_orders').update({ paid_amount: inboundMatch.paid_amount }).eq('id', inboundMatch.id);
-        } catch (ie) {}
+        } catch (ie) { }
       }
     }
 
@@ -1278,7 +2529,7 @@ class SupabaseProvider {
     const inbounds = (await this.getInboundOrders()).filter(i => i.supplier_name === customerName);
     const returns = (await this.getReturns()).filter(r => r.customer_name === customerName);
     const debts = (await this.getDebts()).filter(d => d.customer_name === customerName);
-    
+
     let payments = [];
     if (this.isLiveMode) {
       const debtIds = debts.map(d => d.id).filter(id => isValidUUID(id));
@@ -1287,11 +2538,11 @@ class SupabaseProvider {
         if (data) payments = data;
       }
     }
-    
+
     const db = this.getLocalStorageDb();
     const customerDebtIds = debts.map(d => d.id);
     const localPayments = (db.debt_payments || []).filter(p => customerDebtIds.includes(p.debt_id) || p.customer_name === customerName);
-    
+
     // Combine and remove duplicates by payment_code or id
     const paymentMap = new Map();
     [...payments, ...localPayments].forEach(p => {
@@ -1312,7 +2563,7 @@ class SupabaseProvider {
 
   async createSalesReturn(returnData, itemsToReturn) {
     returnData.id = returnData.id || 'ret_' + Date.now();
-    returnData.return_code = returnData.return_code || ('TH' + new Date().toISOString().slice(0,10).replace(/-/g,'') + Math.floor(10 + Math.random() * 90));
+    returnData.return_code = returnData.return_code || ('TH' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + Math.floor(10 + Math.random() * 90));
     returnData.created_at = new Date().toISOString();
     returnData.items = itemsToReturn || [];
 
@@ -1328,9 +2579,9 @@ class SupabaseProvider {
       const qty = Number(item.quantity) || 1;
 
       // Update LocalStorage product stock
-      const localProd = db.products.find(p => 
-        (prodId && p.id === prodId) || 
-        (prodSku && p.sku === prodSku) || 
+      const localProd = db.products.find(p =>
+        (prodId && p.id === prodId) ||
+        (prodSku && p.sku === prodSku) ||
         (prodName && p.name === prodName)
       );
 
@@ -1410,7 +2661,7 @@ class SupabaseProvider {
     // 2. Adjust Debt / Customer balance & record in Debt Payment History
     if (returnData.total_refund > 0) {
       const cust = db.customers.find(c => c.name === returnData.customer_name);
-      
+
       // Find open receivable debts for this customer
       const customerDebts = (db.debts || []).filter(d => d.customer_name === returnData.customer_name && d.type === 'Receivable');
       let targetDebt = customerDebts.find(d => d.remaining_amount > 0);
@@ -1441,8 +2692,8 @@ class SupabaseProvider {
         }
       }
 
-      const formattedReturnCode = (returnData.return_code && returnData.return_code.startsWith('TH')) 
-        ? returnData.return_code 
+      const formattedReturnCode = (returnData.return_code && returnData.return_code.startsWith('TH'))
+        ? returnData.return_code
         : ('TH-' + (returnData.return_code || Math.floor(100000 + Math.random() * 900000)));
 
       // Record in debt_payments history for debt detail ledger
@@ -1621,7 +2872,7 @@ class SupabaseProvider {
     const db = this.getLocalStorageDb();
 
     orderData.id = orderData.id || 'inb_' + Date.now();
-    orderData.code = orderData.code || ('PR' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + Math.floor(1000 + Math.random() * 9000));
+    orderData.code = orderData.code || ('PR' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '-' + Math.floor(1000 + Math.random() * 9000));
     orderData.created_at = orderData.created_at || new Date().toISOString();
     orderData.status = orderData.status || 'Pending';
     orderData.created_by = orderData.created_by || 'Kỹ thuật';
@@ -1648,7 +2899,7 @@ class SupabaseProvider {
               if (!isNaN(d.getTime())) {
                 sanitizedExpDate = d.toISOString().slice(0, 10);
               }
-            } catch(e) {}
+            } catch (e) { }
           }
         }
 
@@ -1667,10 +2918,10 @@ class SupabaseProvider {
         });
 
         let { data, error } = await this.supabase.from('inbound_orders').insert([payload]).select();
-        
+
         if (error) {
           console.warn('Supabase createInboundOrder initial insert warning:', error);
-          
+
           // Fallback 1: Column 'warehouse' missing on Supabase table
           if (error.code === 'PGRST204' || (error.message && error.message.includes('warehouse'))) {
             delete payload.warehouse;
@@ -1678,7 +2929,7 @@ class SupabaseProvider {
             data = res.data;
             error = res.error;
           }
-          
+
           // Fallback 2: FK constraint violation on supplier_id
           if (error && (error.code === '23503' || (error.message && error.message.includes('supplier_id')))) {
             delete payload.supplier_id;
@@ -1697,7 +2948,7 @@ class SupabaseProvider {
 
           // Fallback 4: Duplicate code -> generate new unique code
           if (error && (error.code === '23505' || (error.message && error.message.toLowerCase().includes('unique')))) {
-            payload.code = 'PR' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + Date.now().toString().slice(-4) + Math.floor(10 + Math.random() * 90);
+            payload.code = 'PR' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '-' + Date.now().toString().slice(-4) + Math.floor(10 + Math.random() * 90);
             savedOrder.code = payload.code;
             const res = await this.supabase.from('inbound_orders').insert([payload]).select();
             data = res.data;
@@ -1784,8 +3035,8 @@ class SupabaseProvider {
       const targetWh = (inbound.warehouse || '').trim();
 
       // 1. Check if product already exists in the TARGET warehouse
-      let targetProd = allProducts.find(p => 
-        (p.id === item.product_id || (p.sku && p.sku === item.product_sku)) && 
+      let targetProd = allProducts.find(p =>
+        (p.id === item.product_id || (p.sku && p.sku === item.product_sku)) &&
         ((p.location || '').trim().toLowerCase() === targetWh.toLowerCase())
       );
 
@@ -1896,7 +3147,7 @@ class SupabaseProvider {
             if (payload.supplier_id && !isValidUUID(payload.supplier_id)) delete payload.supplier_id;
             const { data: insData } = await this.supabase.from('products').insert([payload]).select();
             if (insData && insData.length > 0) brandNewProd.id = insData[0].id;
-          } catch(e) {}
+          } catch (e) { }
         }
       }
 
@@ -2022,7 +3273,7 @@ class SupabaseProvider {
             created_at: debtObj.created_at
           });
           await this.supabase.from('debts').insert([debtPayload]);
-          
+
           if (supplier && isValidUUID(supplier.id)) {
             await this.supabase.from('customers').update({ current_debt: supplier.current_debt }).eq('id', supplier.id);
           }
@@ -2112,7 +3363,7 @@ class SupabaseProvider {
           if (isLive && isValidUUID(sup.id)) {
             try {
               await this.supabase.from('customers').update({ current_debt: sup.current_debt }).eq('id', sup.id);
-            } catch (e) {}
+            } catch (e) { }
           }
         }
       }
@@ -2170,7 +3421,7 @@ class SupabaseProvider {
     lead.id = lead.id || 'l_' + Date.now();
     lead.stage = lead.stage || 'Lead';
     lead.stage_updated_at = lead.stage_updated_at || new Date().toISOString();
-    
+
     let createdLead = lead;
     if (this.isLiveMode) {
       const payload = prepareSupabasePayload(lead);
@@ -2371,7 +3622,7 @@ class SupabaseProvider {
     this.saveLocalStorageDb(db);
     try {
       localStorage.removeItem('ERP_CATEGORY_SHIPPING_RATES');
-    } catch (e) {}
+    } catch (e) { }
   }
 
   async purgeLegacyDummyData() {
@@ -2392,7 +3643,7 @@ class SupabaseProvider {
     }
     try {
       localStorage.removeItem('ERP_CATEGORY_SHIPPING_RATES');
-    } catch (e) {}
+    } catch (e) { }
   }
 
   async saveShippingRulesBulk(rulesArray) {

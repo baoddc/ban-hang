@@ -21,6 +21,15 @@ const CATEGORY_ICONS = {
   'Khác': 'bi-box-seam'
 };
 
+// Distance brackets for 2D Matrix and Shipping Simulator
+const MATRIX_DISTANCE_BRACKETS = [
+  { label: '≤ 15 km', min: 0, max: 15 },
+  { label: 'Từ 16 đến ≤ 30 km', min: 15, max: 30 },
+  { label: 'Từ 31 đến ≤ 60 km', min: 30, max: 60 },
+  { label: 'Từ 61 đến ≤ 90 km', min: 60, max: 90 },
+  { label: '> 90 km', min: 90, max: 9999 }
+];
+
 document.addEventListener('DOMContentLoaded', async () => {
   await loadShippingData();
   setupEventListeners();
@@ -1033,14 +1042,6 @@ async function resetShippingRulesPresets() {
 /* =======================================================
    TAB 3: 2D PRICING MATRIX (INTERACTIVE GRID)
    ======================================================= */
-const MATRIX_DISTANCE_BRACKETS = [
-  { label: '≤ 15 km', min: 0, max: 15 },
-  { label: 'Từ 16 đến ≤ 30 km', min: 15, max: 30 },
-  { label: 'Từ 31 đến ≤ 60 km', min: 30, max: 60 },
-  { label: 'Từ 61 đến ≤ 90 km', min: 60, max: 90 },
-  { label: '> 90 km', min: 90, max: 9999 }
-];
-
 function renderPricingMatrix() {
   const container = document.getElementById('pricing-matrix-container');
   if (!container) return;
